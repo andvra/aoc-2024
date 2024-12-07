@@ -1,3 +1,6 @@
+from operator import methodcaller
+
+
 def all_occurences_in_string(s, c):
     return [i for i in range(len(s)) if s[i] == c]
 
@@ -163,20 +166,31 @@ def day5_part2(fn):
             if not was_added:
                 valid_order.append(page)
         ret += int(valid_order[num_pages // 2])
-        print(book, valid_order)
     return ret
 
 
+def day6_part1(fn):
+    return 0
+
+
+def day6_part2(fn):
+    return 0
+
+
 def aoc_2024():
-    days = {"Day4": [day4_part1, day4_part2], "Day5": [day5_part1, day5_part2]}
-    for name in days:
-        fn_test = f"input/{name}-test.txt"
-        fn_real = f"input/{name}-real.txt"
-        parts = days[name]
-        for idx, func in enumerate(parts):
+    for num_day in range(1, 26):
+        fn_test = f"input/day{num_day}-test.txt"
+        fn_real = f"input/day{num_day}-real.txt"
+        for part in range(1, 3):
+            func_name = f"day{num_day}_part{part}"
+            func = None
+            try:
+                func = eval(func_name)
+            except:
+                continue
             res_test = func(fn_test)
             res_real = func(fn_real)
-            print(f"{name} (part {idx+1}): {res_test} / {res_real}")
+            print(f"Day {num_day} (part {part}): {res_test} / {res_real}")
 
 
 if __name__ == "__main__":
