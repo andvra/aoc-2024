@@ -86,7 +86,7 @@ def day4_part2(fn):
     return num_occurences
 
 
-def day5_part1(fn):
+def day5_common(fn) -> tuple[dict, list[str], list[str]]:
     lines = read_file_as_lines(fn)
     idx_line_split = 0
     for idx_line, line in enumerate(lines):
@@ -105,7 +105,8 @@ def day5_part1(fn):
         else:
             rules[before] = [after]
 
-    ret = 0
+    books_valid = []
+    books_invalid = []
 
     for book in lines_book:
         correct_order = True
@@ -123,14 +124,47 @@ def day5_part1(fn):
                     correct_order = False
                     break
         if correct_order:
-            if num_pages % 2 == 0:
-                print(f"Wrong length, {num_pages}")
-            ret += int(pages[num_pages // 2])
+            books_valid.append(book)
+        else:
+            books_invalid.append(book)
+
+    return rules, books_valid, books_invalid
+
+
+def day5_part1(fn):
+    _, books_valid, _ = day5_common(fn)
+
+    ret = 0
+
+    for book in books_valid:
+        pages = book.split(",")
+        num_pages = len(pages)
+        ret += int(pages[num_pages // 2])
     return ret
 
 
 def day5_part2(fn):
-    return 0
+    rules, _, books_invalid = day5_common(fn)
+
+    ret = 0
+
+    for book in books_invalid:
+        valid_order = []
+        pages = book.split(",")
+        num_pages = len(pages)
+        valid_order.append(pages[0])
+        for page in pages[1:]:
+            was_added = False
+            for idx, cur_added in enumerate(valid_order):
+                if (page in rules) and (cur_added in rules[page]):
+                    valid_order.insert(idx, page)
+                    was_added = True
+                    break
+            if not was_added:
+                valid_order.append(page)
+        ret += int(valid_order[num_pages // 2])
+        print(book, valid_order)
+    return ret
 
 
 def aoc_2024():
