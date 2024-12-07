@@ -9,6 +9,14 @@ def read_file(fn):
     return s
 
 
+def read_file_as_lines(fn):
+    lines = []
+    with open(fn, "r") as file:
+        for line in file:
+            lines.append(line.strip())
+    return lines
+
+
 def read_file_as_single_line(fn):
     s = read_file(fn)
     all_newlines = all_occurences_in_string(s, "\n")
@@ -78,8 +86,55 @@ def day4_part2(fn):
     return num_occurences
 
 
+def day5_part1(fn):
+    lines = read_file_as_lines(fn)
+    idx_line_split = 0
+    for idx_line, line in enumerate(lines):
+        if not line:
+            idx_line_split = idx_line
+
+    lines_rule = lines[:idx_line_split]
+    lines_book = lines[idx_line_split + 1 :]
+
+    rule_lines = [line.split("|") for line in lines_rule]
+    rules = {}
+
+    for before, after in rule_lines:
+        if before in rules:
+            rules[before].append(after)
+        else:
+            rules[before] = [after]
+
+    ret = 0
+
+    for book in lines_book:
+        correct_order = True
+        pages = book.split(",")
+        num_pages = len(pages)
+        for idx_page in range(num_pages - 1, 0, -1):
+            page_after = pages[idx_page]
+            has_rules_for_page = page_after in rules
+            if not has_rules_for_page:
+                continue
+            pages_after_current = rules[page_after]
+            for idx_check in range(idx_page - 1, -1, -1):
+                page_before = pages[idx_check]
+                if page_before in pages_after_current:
+                    correct_order = False
+                    break
+        if correct_order:
+            if num_pages % 2 == 0:
+                print(f"Wrong length, {num_pages}")
+            ret += int(pages[num_pages // 2])
+    return ret
+
+
+def day5_part2(fn):
+    return 0
+
+
 def aoc_2024():
-    days = {"Day4": [day4_part1, day4_part2]}
+    days = {"Day4": [day4_part1, day4_part2], "Day5": [day5_part1, day5_part2]}
     for name in days:
         fn_test = f"input/{name}-test.txt"
         fn_real = f"input/{name}-real.txt"
