@@ -1,4 +1,58 @@
-from operator import methodcaller
+from dataclasses import dataclass
+import math
+import numpy as np
+
+
+@dataclass
+class Point2f:
+    x: float = 0
+    y: float = 0
+
+    def __add__(a, b):
+        return Point2f(a.x + b.x, a.y + b.y)
+
+    def __sub__(a, b):
+        return Point2f(a.x - b.x, a.y - b.y)
+
+    def __truediv__(v, d):
+        v.x /= d
+        v.y /= d
+        return v
+
+    @staticmethod
+    def length(v):
+        return math.sqrt(v.x * v.x + v.y * v.y)
+
+    @staticmethod
+    def normalize(v):
+        return v / Point2f.length(v)
+
+    @staticmethod
+    def collides(pos, dir, target):
+        v = target - pos
+        n = Point2f.normalize(v)
+        return Point2f.length(n - dir) < 0.001
+
+
+@dataclass
+class Point2i:
+    x: int = 0
+    y: int = 0
+
+    def __add__(a, b):
+        return Point2i(a.x + b.x, a.y + b.y)
+
+    def __sub__(a, b):
+        return Point2i(a.x - b.x, a.y - b.y)
+
+    def __mul__(a, b):
+        return Point2i(a.x * b, a.y * b)
+
+    @staticmethod
+    def collides(pos, dir, target):
+        return Point2f.collides(
+            Point2f(pos.x, pos.y), Point2f(dir.x, dir.y), Point2f(target.x, target.y)
+        )
 
 
 def all_occurences_in_string(s, c):
@@ -170,11 +224,68 @@ def day5_part2(fn):
 
 
 def day6_part1(fn):
-    return 0
+    lines = read_file_as_lines(fn)
+    line_width = len(lines[0])
+    num_lines = len(lines)
+    points = []
+    pos_guard = Point2i()
+    dir = Point2i()
 
+    for idx_line, line in enumerate(lines):
+        positions = all_occurences_in_string(line, "#")
+        for pos in positions:
+            points.append(Point2i(pos, idx_line))
+        for idx_char in range(line_width):
+            c = line[idx_char]
+            if c in "^>v<":
+                pos_guard = Point2i(idx_char, idx_line)
+                dir_x = 0
+                dir_y = 0
+                if c == "<":
+                    dir_x = -1
+                if c == ">":
+                    dir_x = 1
+                if c == "^":
+                    dir_y = -1
+                if c == "v":
+                    dir_y = -1
+                dir = Point2i(dir_x, dir_y)
 
-def day6_part2(fn):
-    return 0
+    done = False
+    visited = [[False] * line_width for _ in range(num_lines)]
+    visited[pos_guard.y][pos_guard.x] = True
+
+    while not done:
+        pt_collision = None
+        distance_collision = 10000
+        for point in points:
+            does_collide = Point2i.collides(pos_guard, dir, point)
+            if does_collide:
+                new_distance = Point2f.length(point - pos_guard)
+                if new_distance < distance_collision:
+                    pt_collision = point
+                    distance_collision = new_distance
+        if pt_collision:
+            pt_before = pt_collision - dir
+            num_steps = int(Point2f.length(pt_before - pos_guard))
+            for idx_step in range(1, num_steps + 1):
+                cur_pos = pos_guard + dir * idx_step
+                visited[cur_pos.y][cur_pos.x] = True
+            pos_guard = pt_before
+            dir = Point2i(-dir.y, dir.x)
+        else:
+            cur_pos = pos_guard + dir
+            while (cur_pos.x >= 0 and cur_pos.x < line_width) and (
+                cur_pos.y >= 0 and cur_pos.y < num_lines
+            ):
+                visited[cur_pos.y][cur_pos.x] = True
+                cur_pos += dir
+
+            done = True
+
+    num_visited = sum(x.count(True) for x in visited)
+
+    return num_visited
 
 
 def aoc_2024():
