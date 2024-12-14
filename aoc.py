@@ -177,6 +177,64 @@ def day6_part2(fn):
     return 0
 
 
+def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
+    pos_to_check = []
+    pos_to_check.append((start_row, start_col))
+    is_taken[start_row][start_col] = True
+    idx_start = 0
+    num_elements = len(pos_to_check)
+    plot_type = garden[start_row][start_col]
+    area = 1
+    perimeter = 0
+    done = False
+    while not done:
+        idx_end_excl = idx_start + num_elements
+        num_elements = 0
+        for idx_el in range(idx_start, idx_end_excl):
+            cur_pos_row = pos_to_check[idx_el][0]
+            cur_pos_col = pos_to_check[idx_el][1]
+            for idx_new in range(4):
+                delta_col = [-1, 0, 1, 0][idx_new]
+                delta_row = [0, -1, 0, 1][idx_new]
+                new_row = cur_pos_row + delta_row
+                new_col = cur_pos_col + delta_col
+                outside_col = new_col < 0 or new_col >= num_cols
+                outside_row = new_row < 0 or new_row >= num_rows
+                if outside_col or outside_row:
+                    perimeter = perimeter + 1
+                    continue
+                cur_plot_type = garden[new_row][new_col]
+                if cur_plot_type == plot_type:
+                    if not is_taken[new_row][new_col]:
+                        is_taken[new_row][new_col] = True
+                        area = area + 1
+                        pos_to_check.append((new_row, new_col))
+                        num_elements = num_elements + 1
+                else:
+                    perimeter = perimeter + 1
+        if num_elements == 0:
+            done = True
+        idx_start = idx_end_excl
+    return area * perimeter
+
+
+def day12_part1(fn):
+    garden = read_file_as_lines(fn)
+    num_rows = len(garden)
+    num_cols = len(garden[0])
+    is_taken = [[False] * num_cols for _ in range(num_rows)]
+
+    total_score = 0
+
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if is_taken[row][col] == False:
+                total_score = total_score + day12_floodfill(
+                    garden, is_taken, num_rows, num_cols, row, col
+                )
+    return total_score
+
+
 def aoc_2024():
     for num_day in range(1, 26):
         fn_test = f"input/day{num_day}-test.txt"
