@@ -313,7 +313,41 @@ def day6_part2(fn):
     return 0
 
 
+def day7_generate_operators(num_operators, max_num_combinations):
+    operators = [
+        [0] * max_num_combinations for _ in range(num_operators**max_num_combinations)
+    ]
+    for idx_operator in range(num_operators):
+        for col in range(max_num_combinations):
+            step = num_operators ** (max_num_combinations - col - 1)
+            num_el = num_operators ** (max_num_combinations - col)
+            print(step, num_el)
+            ## TODO: Generate the "binary" table. Eg for num_operators = 2, max_num_combinations = 3
+            ## 000
+            ## 001
+            ## 010
+            ## 011
+            ## 100
+            ## 101
+            ## 110
+            ## 111
+            ##
+            # Num operators = 3, max_num_combinations = 2:
+            #
+            # 00
+            # 01
+            # 02
+            # 10
+            # 11
+            # 12
+            # 20
+            # 21
+            # 22
+
+
 def day7_part1(fn):
+    oo = day7_generate_operators(3, 3)
+    print(oo)
     lines = read_file_as_lines(fn)
     score = 0
     max_number_count = 0
