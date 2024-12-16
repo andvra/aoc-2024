@@ -1,6 +1,3 @@
-from operator import methodcaller
-
-
 def all_occurences_in_string(s, c):
     return [i for i in range(len(s)) if s[i] == c]
 
@@ -178,6 +175,10 @@ def day6_part2(fn):
 
 
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
+    # Segment map has True for each element that is part of the current segment
+    # Pad the segment map with one element in each direction so we do not have
+    #   have to check for out of bounds later on
+    segment_map = [[False] * (num_cols + 2) for _ in range(num_rows + 2)]
     pos_to_check = []
     pos_to_check.append((start_row, start_col))
     is_taken[start_row][start_col] = True
@@ -185,7 +186,7 @@ def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) 
     num_elements = len(pos_to_check)
     plot_type = garden[start_row][start_col]
     area = 1
-    perimeter = 0
+    num_perimeter_plots = 0
     done = False
     while not done:
         idx_end_excl = idx_start + num_elements
@@ -201,9 +202,10 @@ def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) 
                 outside_col = new_col < 0 or new_col >= num_cols
                 outside_row = new_row < 0 or new_row >= num_rows
                 if outside_col or outside_row:
-                    perimeter = perimeter + 1
+                    num_perimeter_plots = num_perimeter_plots + 1
                     continue
                 cur_plot_type = garden[new_row][new_col]
+                segment_map[cur_pos_row + 1][cur_pos_col + 1] = True
                 if cur_plot_type == plot_type:
                     if not is_taken[new_row][new_col]:
                         is_taken[new_row][new_col] = True
@@ -211,11 +213,12 @@ def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) 
                         pos_to_check.append((new_row, new_col))
                         num_elements = num_elements + 1
                 else:
-                    perimeter = perimeter + 1
+                    num_perimeter_plots = num_perimeter_plots + 1
         if num_elements == 0:
             done = True
         idx_start = idx_end_excl
-    return area * perimeter
+
+    return area, num_perimeter_plots, segment_map
 
 
 def day12_part1(fn):
@@ -229,9 +232,53 @@ def day12_part1(fn):
     for row in range(num_rows):
         for col in range(num_cols):
             if is_taken[row][col] == False:
-                total_score = total_score + day12_floodfill(
+                area, num_perimeter_plots, _ = day12_floodfill(
                     garden, is_taken, num_rows, num_cols, row, col
                 )
+                total_score = total_score + area * num_perimeter_plots
+    return total_score
+
+
+def day12_part2(fn):
+    garden = read_file_as_lines(fn)
+    num_rows = len(garden)
+    num_cols = len(garden[0])
+    is_taken = [[False] * num_cols for _ in range(num_rows)]
+
+    total_score = 0
+
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if is_taken[row][col] == False:
+                area, _, segment_map = day12_floodfill(
+                    garden, is_taken, num_rows, num_cols, row, col
+                )
+                num_edges = 0
+                for idx_direction in range(2):
+                    if idx_direction == 1:
+                        for row_rotate in range(0, num_rows + 2):
+                            for col_rotate in range(0, num_rows + 2):
+                                row_rotate_t = col_rotate
+                                col_rotate_t = row_rotate
+                                temp = segment_map[row_rotate][col_rotate]
+                                segment_map[row_rotate][col_rotate] = segment_map[
+                                    row_rotate_t
+                                ][col_rotate_t]
+                                segment_map[row_rotate_t][col_rotate_t] = temp
+                    for row_perimeter in range(1, num_rows + 2):
+                        last_type = 0
+                        for col_perimeter in range(0, num_cols + 2):
+                            plot_above = segment_map[row_perimeter - 1][col_perimeter]
+                            plot_this = segment_map[row_perimeter][col_perimeter]
+                            this_type = 0
+                            if plot_above and not plot_this:
+                                this_type = 1
+                            if not plot_above and plot_this:
+                                this_type = 2
+                            if (this_type != last_type) and this_type != 0:
+                                num_edges = num_edges + 1
+                            last_type = this_type
+                total_score = total_score + area * num_edges
     return total_score
 
 
