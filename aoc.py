@@ -358,6 +358,7 @@ def day7_part1(fn):
         max_number_count = max(max_number_count, len(numbers))
     max_num_operators = max_number_count - 1
     operators = list(map(list, itertools.product([0, 1], repeat=max_num_operators)))
+    # TODO: Replace line above with day7_generate_operators()
     for line in lines:
         parts = line.split(": ")
         the_sum = int(parts[0])
