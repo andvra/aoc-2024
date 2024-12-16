@@ -1,3 +1,6 @@
+import re
+
+
 def all_occurences_in_string(s, c):
     return [i for i in range(len(s)) if s[i] == c]
 
@@ -20,7 +23,10 @@ def read_file_as_lines(fn):
 def read_file_as_single_line(fn):
     s = read_file(fn)
     all_newlines = all_occurences_in_string(s, "\n")
-    line_length = all_newlines[0]
+    if len(all_newlines) == 0:
+        line_length = len(s)
+    else:
+        line_length = all_newlines[0]
     num_lines = len(all_newlines) + 1
     s = s.replace("\n", "")
     return s, num_lines, line_length
@@ -118,6 +124,29 @@ def day2_part2(fn):
         if safe:
             num_safe = num_safe + 1
     return num_safe
+
+
+def day3_part1(fn):
+    line, _, _ = read_file_as_single_line(fn)
+    start_indices = [m.start() for m in re.finditer("mul\(", line)]
+    result = 0
+    for idx_start in start_indices:
+        idx_end = line.find(")", idx_start)
+        if idx_end == -1:
+            continue
+        inside = line[idx_start + 4 : idx_end]
+        parts = inside.split(",")
+        if len(parts) != 2:
+            continue
+        valid_numbers = True
+        for part in parts:
+            for c in part:
+                if c < "0" or c > "9":
+                    valid_numbers = False
+        if valid_numbers:
+            result = result + int(parts[0]) * int(parts[1])
+
+    return result
 
 
 def day4_part1(fn):
