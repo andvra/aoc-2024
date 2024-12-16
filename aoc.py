@@ -64,6 +64,62 @@ def day1_part2(fn):
     return score
 
 
+def day2_part1(fn):
+    lines = read_file_as_lines(fn)
+
+    num_safe = 0
+    for line in lines:
+        numbers = list(map(int, line.split()))
+        if numbers[0] > numbers[1]:
+            numbers = numbers[::-1]
+        safe = True
+        for idx_number in range(len(numbers) - 1):
+            cur = numbers[idx_number]
+            next = numbers[idx_number + 1]
+            if next <= cur or next - cur > 3:
+                safe = False
+        if safe:
+            num_safe = num_safe + 1
+    return num_safe
+
+
+def day2_first_error(numbers):
+    num_numbers = len(numbers)
+    for idx_number in range(num_numbers - 1):
+        cur = numbers[idx_number]
+        next = numbers[idx_number + 1]
+        diff = next - cur
+        is_invalid = (diff < 1) or (diff > 3)
+        if is_invalid:
+            return idx_number
+    return None
+
+
+def day2_part2(fn):
+    lines = read_file_as_lines(fn)
+
+    num_safe = 0
+    for line in lines:
+        numbers = list(map(int, line.split()))
+        safe = False
+        for idx_dir in [0, 1]:
+            if idx_dir == 0:
+                cur_numbers = numbers[:]
+            if idx_dir == 1:
+                cur_numbers = numbers[::-1]
+            first_error = day2_first_error(cur_numbers)
+            cur_safe = True
+            if first_error != None:
+                arr1 = cur_numbers[:first_error] + cur_numbers[first_error + 1 :]
+                arr2 = cur_numbers[: first_error + 1] + cur_numbers[first_error + 2 :]
+                cur_safe = day2_first_error(arr1) == None
+                cur_safe = cur_safe or day2_first_error(arr2) == None
+            safe = safe or cur_safe
+        if safe:
+            num_safe = num_safe + 1
+    return num_safe
+
+
 def day4_part1(fn):
     input, num_lines, line_length = read_file_as_single_line(fn)
     all_positions = all_occurences_in_string(input, "X")
