@@ -1,4 +1,5 @@
 import re
+import itertools
 
 
 def all_occurences_in_string(s, c):
@@ -309,6 +310,44 @@ def day6_part1(fn):
 
 
 def day6_part2(fn):
+    return 0
+
+
+def day7_part1(fn):
+    lines = read_file_as_lines(fn)
+    score = 0
+    max_number_count = 0
+    for line in lines:
+        parts = line.split(": ")
+        the_sum = int(parts[0])
+        numbers = list(map(int, parts[1].split(" ")))
+        max_number_count = max(max_number_count, len(numbers))
+    max_num_operators = max_number_count - 1
+    operators = list(map(list, itertools.product([0, 1], repeat=max_num_operators)))
+    for line in lines:
+        parts = line.split(": ")
+        the_sum = int(parts[0])
+        numbers = list(map(int, parts[1].split(" ")))
+        found_match = False
+        num_operators = len(numbers) - 1
+        num_combinations = 2**num_operators
+        for combination_whole_line in operators[:num_combinations]:
+            combination = combination_whole_line[max_num_operators - num_operators :]
+            res = numbers[0]
+            for idx, num in enumerate(numbers[1:]):
+                if combination[idx] == 0:
+                    res = res + num
+                else:
+                    res = res * num
+            if res == the_sum:
+                found_match = True
+        if found_match:
+            score = score + the_sum
+
+    return score
+
+
+def day7_part2(fn):
     return 0
 
 
