@@ -293,6 +293,7 @@ def day12_part2(fn):
                 )
                 num_edges = 0
                 for idx_direction in range(2):
+                    # Rotate the second time around, so we count vertical edges as well
                     if idx_direction == 1:
                         for row_rotate in range(0, num_rows + 2):
                             for col_rotate in range(0, num_rows + 2):
