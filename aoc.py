@@ -126,8 +126,7 @@ def day2_part2(fn):
     return num_safe
 
 
-def day3_part1(fn):
-    line, _, _ = read_file_as_single_line(fn)
+def day3_result_from_line(line):
     start_indices = [m.start() for m in re.finditer("mul\(", line)]
     result = 0
     for idx_start in start_indices:
@@ -145,8 +144,24 @@ def day3_part1(fn):
                     valid_numbers = False
         if valid_numbers:
             result = result + int(parts[0]) * int(parts[1])
-
     return result
+
+
+def day3_part1(fn):
+    line, _, _ = read_file_as_single_line(fn)
+    return day3_result_from_line(line)
+
+
+def day3_part2(fn):
+    file_line, _, _ = read_file_as_single_line(fn)
+    lines = file_line.split("don't()")
+    score = day3_result_from_line(lines[0])
+    for line in lines[1:]:
+        idx_enable = line.find("do()")
+        if idx_enable == -1:
+            continue
+        score = score + day3_result_from_line(line[idx_enable:])
+    return score
 
 
 def day4_part1(fn):
