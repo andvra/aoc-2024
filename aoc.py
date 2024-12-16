@@ -26,6 +26,23 @@ def read_file_as_single_line(fn):
     return s, num_lines, line_length
 
 
+def day1_part1(fn):
+    lines = read_file_as_lines(fn)
+    num_lines = len(lines)
+    list1 = []
+    list2 = []
+    for line in lines:
+        a, b = map(int, line.split())
+        list1.append(a)
+        list2.append(b)
+    list.sort(list1)
+    list.sort(list2)
+    tot_diff = 0
+    for a, b in zip(list1, list2):
+        tot_diff = tot_diff + abs(a - b)
+    return tot_diff
+
+
 def day4_part1(fn):
     input, num_lines, line_length = read_file_as_single_line(fn)
     all_positions = all_occurences_in_string(input, "X")
