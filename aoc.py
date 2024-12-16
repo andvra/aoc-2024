@@ -324,7 +324,7 @@ def aoc_2024():
     for num_day in range(1, 26):
         fn_test = f"input/day{num_day}-test.txt"
         fn_real = f"input/day{num_day}-real.txt"
-        for part in range(1, 3):
+        for part in [1, 2]:
             func_name = f"day{num_day}_part{part}"
             func = None
             try:
