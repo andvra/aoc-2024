@@ -28,7 +28,6 @@ def read_file_as_single_line(fn):
 
 def day1_part1(fn):
     lines = read_file_as_lines(fn)
-    num_lines = len(lines)
     list1 = []
     list2 = []
     for line in lines:
@@ -41,6 +40,28 @@ def day1_part1(fn):
     for a, b in zip(list1, list2):
         tot_diff = tot_diff + abs(a - b)
     return tot_diff
+
+
+def day1_part2(fn):
+    lines = read_file_as_lines(fn)
+    list1 = []
+    list2 = []
+    for line in lines:
+        a, b = map(int, line.split())
+        list1.append(a)
+        list2.append(b)
+    num_map = {}
+    for el in list2:
+        if el in num_map:
+            num_map[el] = num_map[el] + 1
+        else:
+            num_map[el] = 1
+
+    score = 0
+    for el in list1:
+        if el in num_map:
+            score = score + el * num_map[el]
+    return score
 
 
 def day4_part1(fn):
