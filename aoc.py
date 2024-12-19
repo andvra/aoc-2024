@@ -810,10 +810,6 @@ def day17_part1(fn):
             case 3:
                 if registers[0] != 0:
                     idx_op = literal
-                    if literal % 2 != 0:
-                        print(
-                            "We expect the jump to point to an operator, not a operand"
-                        )
                     continue
             case 4:
                 registers[1] = registers[1] ^ registers[2]
