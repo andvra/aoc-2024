@@ -483,7 +483,7 @@ def day6_part1(fn):
             visited[cur_pos.y + cur_dir.y * idx_step][
                 cur_pos.x + cur_dir.x * idx_step
             ] = True
-        day6_print_visited(visited, num_lines, line_width)
+        # day6_print_visited(visited, num_lines, line_width)
         if new_pos == None:
             done = True
         else:
@@ -560,8 +560,8 @@ def day6_part2(fn):
                 cur_pos,
                 cur_dir,
             )
-            print("IN ", cur_pos, cur_dir)
-            print(idx_start, num_steps, new_pos, new_dir)
+            # print("IN ", cur_pos, cur_dir)
+            # print(idx_start, num_steps, new_pos, new_dir)
             if new_pos == None:
                 done = True
             else:
@@ -599,7 +599,7 @@ def day7_generate_operators(num_operators, max_num_combinations):
         for col in range(max_num_combinations):
             step = num_operators ** (max_num_combinations - col - 1)
             num_el = num_operators ** (max_num_combinations - col)
-            print(step, num_el)
+            # print(step, num_el)
             ## TODO: Generate the "binary" table. Eg for num_operators = 2, max_num_combinations = 3
             ## 000
             ## 001
@@ -625,7 +625,7 @@ def day7_generate_operators(num_operators, max_num_combinations):
 
 def day7_part1(fn):
     oo = day7_generate_operators(3, 3)
-    print(oo)
+    # print(oo)
     lines = read_file_as_lines(fn)
     score = 0
     max_number_count = 0
@@ -773,8 +773,71 @@ def day12_part2(fn):
     return total_score
 
 
+def day17_part1(fn):
+    lines = read_file_as_lines(fn)
+    registers = []
+    for line in lines:
+        is_register = line.find("Register") != -1
+        is_program = line.find("Program") != -1
+        parts = line.split(": ")
+        if is_register:
+            registers.append(int(parts[1]))
+        if is_program:
+            numbers_str = parts[1].split(",")
+            numbers = list(map(lambda x: int(x), numbers_str))
+            op_list = list(zip(numbers[::2], numbers[1::2]))
+
+    done = False
+    idx_op = 0
+    output_vals = []
+    while not done:
+        cmd, literal = op_list[idx_op]
+        combo = 0
+        if literal <= 3:
+            combo = literal
+        elif combo <= 6:
+            combo = registers[literal - 4]
+        else:
+            print("ERROR")
+        match cmd:
+            case 0:
+                the_pow = 2**combo
+                registers[0] = registers[0] // the_pow
+            case 1:
+                registers[1] = registers[1] ^ literal
+            case 2:
+                registers[1] = combo % 8
+            case 3:
+                if registers[0] != 0:
+                    idx_op = literal
+                    if literal % 2 != 0:
+                        print(
+                            "We expect the jump to point to an operator, not a operand"
+                        )
+                    continue
+            case 4:
+                registers[1] = registers[1] ^ registers[2]
+            case 5:
+                output_vals.append(combo % 8)
+            case 6:
+                the_pow = 2**combo
+                registers[1] = registers[0] // the_pow
+            case 7:
+                the_pow = 2**combo
+                registers[2] = registers[0] // the_pow
+        idx_op = idx_op + 1
+        if idx_op >= len(op_list):
+            done = True
+    res = ",".join(str(n) for n in output_vals)
+    return res
+
+
+def day17_part2(fn):
+    return 0
+
+
 def aoc_2024():
-    run_real = False
+    run_real = True
     for num_day in range(1, 26):
         fn_test = f"input/day{num_day}-test.txt"
         fn_real = f"input/day{num_day}-real.txt"
