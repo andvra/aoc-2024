@@ -359,7 +359,7 @@ def day5_part2(fn):
     return ret
 
 
-def day6_part1(fn):
+def day6_setup(fn):
     lines = read_file_as_lines(fn)
     line_width = len(lines[0])
     num_lines = len(lines)
@@ -386,46 +386,209 @@ def day6_part1(fn):
                 if c == "v":
                     dir_y = -1
                 dir = Point2i(dir_x, dir_y)
+    obstacle_pos_per_col = [[] for _ in range(line_width)]
+    obstacle_pos_per_row = [[] for _ in range(num_lines)]
 
-    done = False
+    for point in points:
+        obstacle_pos_per_col[point.x].append(point.y)
+        obstacle_pos_per_row[point.y].append(point.x)
+
+    return (
+        num_lines,
+        line_width,
+        points,
+        obstacle_pos_per_col,
+        obstacle_pos_per_row,
+        pos_guard,
+        dir,
+    )
+
+
+def day6_move_straight(
+    num_lines, line_width, obstacle_pos_per_col, obstacle_pos_per_row, cur_pos, cur_dir
+):
+    num_steps = 0
+    new_pos = Point2i(cur_pos.x, cur_pos.y)
+    new_dir = Point2i(cur_dir.x, cur_dir.y)
+    max_distance = 1000000
+    closest_point_distance = max_distance
+
+    if cur_dir.x != 0:
+        for col in obstacle_pos_per_row[cur_pos.y]:
+            correct_dir = ((cur_pos.x - col) / cur_dir.x) < 0
+            if correct_dir:
+                closest_point_distance = abs(cur_pos.x - col)
+    if cur_dir.y != 0:
+        for row in obstacle_pos_per_col[cur_pos.x]:
+            correct_dir = ((cur_pos.y - row) / cur_dir.y) < 0
+            if correct_dir:
+                closest_point_distance = abs(cur_pos.y - row)
+
+    if closest_point_distance == max_distance:
+        if cur_dir.x > 0:
+            num_steps = line_width - cur_pos.x - 1
+        if cur_dir.x < 0:
+            num_steps = cur_pos.x
+        if cur_dir.y > 0:
+            num_steps = num_lines - cur_pos.y - 1
+        if cur_dir.y < 0:
+            num_steps = cur_pos.y
+        return num_steps, None, None
+    num_steps = closest_point_distance - 1
+    temp_x = new_dir.x
+    new_dir.x = -new_dir.y
+    new_dir.y = temp_x
+    new_pos.x = cur_pos.x + cur_dir.x * num_steps
+    new_pos.y = cur_pos.y + cur_dir.y * num_steps
+    return num_steps, new_pos, new_dir
+
+
+def day6_print_visited(visited, num_lines, line_width):
+    for row in range(num_lines):
+        for col in range(line_width):
+            val = visited[row][col]
+            char = "."
+            if val:
+                char = "x"
+            print(char, end="")
+        print("")
+    print("")
+
+
+def day6_part1(fn):
+    (
+        num_lines,
+        line_width,
+        points,
+        obstacle_pos_per_col,
+        obstacle_pos_per_row,
+        pos_guard,
+        cur_dir,
+    ) = day6_setup(fn)
     visited = [[False] * line_width for _ in range(num_lines)]
     visited[pos_guard.y][pos_guard.x] = True
+    cur_pos = pos_guard
+    done = False
 
     while not done:
-        pt_collision = None
-        distance_collision = 10000
-        for point in points:
-            does_collide = Point2i.collides(pos_guard, dir, point)
-            if does_collide:
-                new_distance = Point2f.length(point - pos_guard)
-                if new_distance < distance_collision:
-                    pt_collision = point
-                    distance_collision = new_distance
-        if pt_collision:
-            pt_before = pt_collision - dir
-            num_steps = int(Point2f.length(pt_before - pos_guard))
-            for idx_step in range(1, num_steps + 1):
-                cur_pos = pos_guard + dir * idx_step
-                visited[cur_pos.y][cur_pos.x] = True
-            pos_guard = pt_before
-            dir = Point2i(-dir.y, dir.x)
-        else:
-            cur_pos = pos_guard + dir
-            while (cur_pos.x >= 0 and cur_pos.x < line_width) and (
-                cur_pos.y >= 0 and cur_pos.y < num_lines
-            ):
-                visited[cur_pos.y][cur_pos.x] = True
-                cur_pos += dir
-
+        num_steps, new_pos, new_dir = day6_move_straight(
+            num_lines,
+            line_width,
+            obstacle_pos_per_col,
+            obstacle_pos_per_row,
+            cur_pos,
+            cur_dir,
+        )
+        for idx_step in range(1, num_steps + 1):
+            visited[cur_pos.y + cur_dir.y * idx_step][
+                cur_pos.x + cur_dir.x * idx_step
+            ] = True
+        day6_print_visited(visited, num_lines, line_width)
+        if new_pos == None:
             done = True
+        else:
+            cur_pos.x = new_pos.x
+            cur_pos.y = new_pos.y
+            cur_dir.x = new_dir.x
+            cur_dir.y = new_dir.y
 
     num_visited = sum(x.count(True) for x in visited)
-
     return num_visited
 
 
 def day6_part2(fn):
-    pass
+    (
+        num_lines,
+        line_width,
+        points,
+        obstacle_pos_per_col,
+        obstacle_pos_per_row,
+        pos_guard,
+        cur_dir,
+    ) = day6_setup(fn)
+    dir = [cur_dir]
+    pos = [pos_guard]
+    cur_pos = pos_guard
+    done = False
+
+    while not done:
+        num_steps, new_pos, new_dir = day6_move_straight(
+            num_lines,
+            line_width,
+            obstacle_pos_per_col,
+            obstacle_pos_per_row,
+            cur_pos,
+            cur_dir,
+        )
+        for idx_step in range(1, num_steps + 1):
+            visit_dir = Point2i(cur_dir.x, cur_dir.y)
+            visit_pos = Point2i(
+                cur_pos.x + idx_step * cur_dir.x, cur_pos.y + idx_step * cur_dir.y
+            )
+            dir.append(visit_dir)
+            pos.append(visit_pos)
+        if new_pos == None:
+            done = True
+        else:
+            cur_pos.x = new_pos.x
+            cur_pos.y = new_pos.y
+            cur_dir.x = new_dir.x
+            cur_dir.y = new_dir.y
+
+    num_steps = len(dir)
+    points.append(Point2i(-1, -1))
+    num_loops = 0
+
+    for idx_start in range(num_steps - 1):
+        points[-1].x = pos[idx_start + 1].x
+        points[-1].y = pos[idx_start + 1].y
+        done = False
+        stop_dir = []
+        stop_pos = []
+        cur_pos.x = pos[idx_start].x
+        cur_pos.y = pos[idx_start].y
+        cur_dir.x = dir[idx_start].x
+        cur_dir.y = dir[idx_start].y
+        cur_step = 0
+        while not done:
+            cur_step = cur_step + 1
+            num_steps, new_pos, new_dir = day6_move_straight(
+                num_lines,
+                line_width,
+                obstacle_pos_per_col,
+                obstacle_pos_per_row,
+                cur_pos,
+                cur_dir,
+            )
+            print("IN ", cur_pos, cur_dir)
+            print(idx_start, num_steps, new_pos, new_dir)
+            if new_pos == None:
+                done = True
+            else:
+                if cur_step % 100:
+                    for idx_step in range(len(stop_dir)):
+                        same_pos = (
+                            new_pos.x == stop_pos[idx_step].x
+                            and new_pos.y == stop_pos[idx_step].y
+                        )
+                        same_dir = (
+                            new_dir.x == stop_dir[idx_step].x
+                            and new_dir.y == stop_dir[idx_step].y
+                        )
+                        if same_pos and same_dir:
+                            num_loops = num_loops + 1
+                            if num_loops % 100 == 0:
+                                print("Num loops: ", num_loops)
+                            done = True
+                stop_dir.append(new_dir)
+                stop_pos.append(new_pos)
+                cur_pos.x = new_pos.x
+                cur_pos.y = new_pos.y
+                cur_dir.x = new_dir.x
+                cur_dir.y = new_dir.y
+
+    # 2425 is too high. 560 too low
+    return num_loops
 
 
 def day7_generate_operators(num_operators, max_num_combinations):
@@ -611,6 +774,7 @@ def day12_part2(fn):
 
 
 def aoc_2024():
+    run_real = False
     for num_day in range(1, 26):
         fn_test = f"input/day{num_day}-test.txt"
         fn_real = f"input/day{num_day}-real.txt"
@@ -622,7 +786,9 @@ def aoc_2024():
             except:
                 continue
             res_test = func(fn_test)
-            res_real = func(fn_real)
+            res_real = 0
+            if run_real:
+                res_real = func(fn_real)
             print(f"Day {num_day} (part {part}): {res_test} / {res_real}")
 
 
