@@ -773,7 +773,7 @@ def day12_part2(fn):
     return total_score
 
 
-def day17_part1(fn):
+def day17_read_input(fn):
     lines = read_file_as_lines(fn)
     registers = []
     for line in lines:
@@ -786,7 +786,11 @@ def day17_part1(fn):
             numbers_str = parts[1].split(",")
             numbers = list(map(lambda x: int(x), numbers_str))
             op_list = list(zip(numbers[::2], numbers[1::2]))
+    return registers, op_list
 
+
+def day17_part1(fn):
+    registers, op_list = day17_read_input(fn)
     done = False
     idx_op = 0
     output_vals = []
@@ -829,6 +833,7 @@ def day17_part1(fn):
 
 
 def day17_part2(fn):
+    registers, op_list = day17_read_input(fn)
     return 0
 
 
