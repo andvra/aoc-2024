@@ -690,13 +690,12 @@ def day8_dehash(val):
     return row, col
 
 
-def day8_part1(fn):
+def day8_get_element_map(fn):
     lines = read_file_as_lines(fn)
     num_rows = len(lines)
     num_cols = len(lines[0])
     unique_characters = set([el for line in lines for el in line if el != "."])
     element_map = {}
-    antinode_positions = set()
     for c in unique_characters:
         element_map[c] = []
     for row in range(num_rows):
@@ -704,6 +703,12 @@ def day8_part1(fn):
             c = lines[row][col]
             if c != ".":
                 element_map[c].append(day8_hash(row, col))
+    return element_map, num_rows, num_cols
+
+
+def day8_part1(fn):
+    element_map, num_rows, num_cols = day8_get_element_map(fn)
+    antinode_positions = set()
     for _, positions_for_char in element_map.items():
         num_positions = len(positions_for_char)
         for idx_start in range(num_positions):
@@ -718,6 +723,35 @@ def day8_part1(fn):
                             antinode_positions.add(
                                 day8_hash(row_antinode, col_antinode)
                             )
+    return len(antinode_positions)
+
+
+def day8_part2(fn):
+    element_map, num_rows, num_cols = day8_get_element_map(fn)
+    antinode_positions = set()
+    for _, positions_for_char in element_map.items():
+        num_positions = len(positions_for_char)
+        for idx_start in range(num_positions):
+            row_start, col_start = day8_dehash(positions_for_char[idx_start])
+            antinode_positions.add(day8_hash(row_start, col_start))
+            for idx_end in range(num_positions):
+                if idx_start != idx_end:
+                    row_end, col_end = day8_dehash(positions_for_char[idx_end])
+                    is_valid = True
+                    step = 1
+                    while is_valid:
+                        row_antinode = row_end + (row_end - row_start) * step
+                        col_antinode = col_end + (col_end - col_start) * step
+                        if row_antinode >= 0 and col_antinode >= 0:
+                            if row_antinode < num_rows and col_antinode < num_cols:
+                                antinode_positions.add(
+                                    day8_hash(row_antinode, col_antinode)
+                                )
+                            else:
+                                is_valid = False
+                        else:
+                            is_valid = False
+                        step += 1
     return len(antinode_positions)
 
 
