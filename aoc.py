@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 import math
 import re
+import sys
 import itertools
+import numpy as np
 
 
 @dataclass
@@ -592,13 +594,26 @@ def day6_part2(fn):
 
 
 def day7_generate_operators(num_operators, max_num_combinations):
-    operators = [
-        [0] * max_num_combinations for _ in range(num_operators**max_num_combinations)
-    ]
+    operators = np.array(
+        [[0] * max_num_combinations for _ in range(num_operators**max_num_combinations)]
+    )
+    print("Shape: ", operators.shape)
     for idx_operator in range(num_operators):
         for col in range(max_num_combinations):
-            step = num_operators ** (max_num_combinations - col - 1)
-            num_el = num_operators ** (max_num_combinations - col)
+            step_length = num_operators ** (max_num_combinations - col)
+            num_el = num_operators ** (max_num_combinations - col - 1)
+            num_steps = 1
+            for step in range(num_steps):
+                row_start = step * step_length + num_el * idx_operator
+                row_end_excl = step * step_length + num_el * idx_operator + 1
+                print(
+                    "To assign: ",
+                    row_start,
+                    row_end_excl,
+                    col,
+                    idx_operator,
+                )
+                operators[row_start:row_end_excl][col] = idx_operator
             # print(step, num_el)
             ## TODO: Generate the "binary" table. Eg for num_operators = 2, max_num_combinations = 3
             ## 000
@@ -621,10 +636,11 @@ def day7_generate_operators(num_operators, max_num_combinations):
             # 20
             # 21
             # 22
+    return operators
 
 
 def day7_part1(fn):
-    oo = day7_generate_operators(3, 3)
+    # oo = day7_generate_operators(2, 2)
     # print(oo)
     lines = read_file_as_lines(fn)
     score = 0
@@ -662,6 +678,47 @@ def day7_part1(fn):
 
 def day7_part2(fn):
     return 0
+
+
+def day8_hash(row, col):
+    return row * 1000 + col
+
+
+def day8_dehash(val):
+    row = val // 1000
+    col = val % 1000
+    return row, col
+
+
+def day8_part1(fn):
+    lines = read_file_as_lines(fn)
+    num_rows = len(lines)
+    num_cols = len(lines[0])
+    unique_characters = set([el for line in lines for el in line if el != "."])
+    element_map = {}
+    antinode_positions = set()
+    for c in unique_characters:
+        element_map[c] = []
+    for row in range(num_rows):
+        for col in range(num_cols):
+            c = lines[row][col]
+            if c != ".":
+                element_map[c].append(day8_hash(row, col))
+    for _, positions_for_char in element_map.items():
+        num_positions = len(positions_for_char)
+        for idx_start in range(num_positions):
+            row_start, col_start = day8_dehash(positions_for_char[idx_start])
+            for idx_end in range(num_positions):
+                if idx_start != idx_end:
+                    row_end, col_end = day8_dehash(positions_for_char[idx_end])
+                    row_antinode = 2 * row_end - row_start
+                    col_antinode = 2 * col_end - col_start
+                    if row_antinode >= 0 and col_antinode >= 0:
+                        if row_antinode < num_rows and col_antinode < num_cols:
+                            antinode_positions.add(
+                                day8_hash(row_antinode, col_antinode)
+                            )
+    return len(antinode_positions)
 
 
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
@@ -839,7 +896,12 @@ def day17_part2(fn):
 
 def aoc_2024():
     run_real = True
-    for num_day in range(1, 26):
+    day_start = 1
+    day_end_excl = 26
+    if single_day != None:
+        day_start = single_day
+        day_end_excl = single_day + 1
+    for num_day in range(day_start, day_end_excl):
         fn_test = f"input/day{num_day}-test.txt"
         fn_real = f"input/day{num_day}-real.txt"
         for part in [1, 2]:
@@ -857,4 +919,8 @@ def aoc_2024():
 
 
 if __name__ == "__main__":
-    aoc_2024()
+    if len(sys.argv) == 2 and sys.argv[1].isdigit():
+        single_day = int(sys.argv[1])
+        aoc_2024(single_day)
+    else:
+        aoc_2024()
