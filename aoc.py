@@ -755,6 +755,53 @@ def day8_part2(fn):
     return len(antinode_positions)
 
 
+def day9_as_blocks(line):
+    blocks = []
+    if len(line) % 2 != 0:
+        line += "0"
+    for _, (block_size, block_space) in enumerate(zip(line[0::2], line[1::2])):
+        blocks.append((int(block_size), int(block_space)))
+    return blocks
+
+
+def day9_blocks_to_list(blocks):
+    s = []
+    for idx, (block_size, block_space) in enumerate(blocks):
+        s += [str(idx) for _ in range(block_size)]
+        s += ["." for _ in range(block_space)]
+    return s
+
+
+def day9_part1(fn: str):
+    line, _, _ = read_file_as_single_line(fn)
+    blocks = day9_as_blocks(line)
+    blocks_as_list = day9_blocks_to_list(blocks)
+    pos_num = []
+    pos_space = []
+    num_bytes = len(blocks_as_list)
+    for idx in range(num_bytes):
+        cur_char = blocks_as_list[idx]
+        if cur_char == ".":
+            pos_space.append(idx)
+        else:
+            pos_num.append(idx)
+    num_num = len(pos_num)
+    idx_next_space = 0
+    idx_next_num = len(pos_num) - 1
+    while pos_space[idx_next_space] < pos_num[idx_next_num]:
+        cur_pos_num = pos_num[idx_next_num]
+        cur_pos_space = pos_space[idx_next_space]
+        cur_num = blocks_as_list[cur_pos_num]
+        blocks_as_list[cur_pos_space] = cur_num
+        blocks_as_list[cur_pos_num] = "."
+        idx_next_space += 1
+        idx_next_num -= 1
+    res = 0
+    for idx in range(num_num):
+        res += int(blocks_as_list[idx]) * idx
+    print(res)
+
+
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
     # Segment map has True for each element that is part of the current segment
     # Pad the segment map with one element in each direction so we do not have
