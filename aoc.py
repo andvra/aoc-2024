@@ -907,8 +907,8 @@ def day11_blink(fn: str, num_blinks):
         next_stone[idx] = idx + 1
     for idx in range(cur_num_stones):
         num_digits[idx] = len(str(stones[idx]))
+
     for idx in range(num_blinks):
-        print(idx, end=" ", flush=True)
         for idx in range(cur_num_stones):
             cur_num_digits = num_digits[idx]
             if stones[idx] == 0:
@@ -946,16 +946,93 @@ def day11_blink(fn: str, num_blinks):
                     num_to_multiply[stones[idx]] = (val, num_dig)
                 stones[idx] = val
                 num_digits[idx] = num_dig
-    print()
+
     return cur_num_stones
+
+
+def day11_splits(fn: str):
+    line, _, _ = read_file_as_single_line(fn)
+    input_stones = [int(s) for s in line.split(" ")]
+    stones = set(input_stones)
+    splits = {}
+    done = False
+    while not done:
+        new_stones = set()
+        for stone_original in stones:
+            if stone_original in splits:
+                continue
+            is_split = False
+            steps = 0
+            stone = stone_original
+            while is_split == False:
+                if stone == 0:
+                    stone = 1
+                    new_stones.add(stone)
+                elif len(str(stone)) % 2 == 0:
+                    as_string = str(stone)
+                    num_digits = len(as_string)
+                    num_left = int(as_string[: num_digits // 2])
+                    num_right = int(as_string[num_digits // 2 :])
+                    new_stones.add(num_left)
+                    new_stones.add(num_right)
+                    splits[stone_original] = (steps, num_left, num_right)
+                    is_split = True
+                else:
+                    stone = stone * 2024
+                    new_stones.add(stone)
+                steps += 1
+        len_before = len(stones)
+        stones.update(new_stones)
+        len_after = len(stones)
+        if len_before == len_after:
+            done = True
+    return splits
 
 
 def day11_part1(fn: str):
     return day11_blink(fn, 25)
 
 
+def day11_follow_splits(splits, vals_initial, max_level):
+    max_num_vals = 10000000
+    vals = np.zeros(max_num_vals, dtype=int)
+    vals[: len(vals_initial)] = vals_initial
+    levels = np.zeros(max_num_vals, dtype=int)
+    idx_cur = len(vals_initial)
+    idx_start = 0
+    idx_end_excl = len(vals_initial)
+    done = False
+    num_stones = len(vals_initial)
+    while not done:
+        idx_cur_old = idx_cur
+        for idx in range(idx_start, idx_end_excl):
+            steps, val_left, val_right = splits[vals[idx]]
+            new_level = levels[idx] + steps + 1
+            if new_level > max_level:
+                continue
+            vals[idx_cur] = val_left
+            levels[idx_cur] = new_level
+            vals[idx_cur + 1] = val_right
+            levels[idx_cur + 1] = new_level
+            idx_cur += 2
+            num_stones += 1
+        num_new = idx_cur - idx_cur_old
+        if num_new == 0:
+            done = True
+        else:
+            idx_start = idx_end_excl
+            idx_end_excl = idx_start + num_new
+    return num_stones
+
+
 def day11_part2(fn: str):
-    return day11_blink(fn, 75)
+    line, _, _ = read_file_as_single_line(fn)
+    input_stones = [int(s) for s in line.split(" ")]
+    splits = day11_splits(fn)
+    num_stones = 0
+    max_level = 25
+    num_stones = day11_follow_splits(splits, input_stones, max_level)
+    return num_stones
 
 
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
