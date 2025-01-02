@@ -851,7 +851,7 @@ def day10_find(topo, row, col, look_for):
     return pos_hash
 
 
-def day10_part1(fn: str):
+def day10_find_paths(fn: str):
     lines = read_file_as_lines(fn)
     num_rows = len(lines)
     num_cols = len(lines[0])
@@ -859,11 +859,24 @@ def day10_part1(fn: str):
     topo = np.ones((num_rows + 2, num_cols + 2), dtype=int) * 10
     topo[1 : num_rows + 1, 1 : num_cols + 1] = lines_as_ints
     trailheads = np.argwhere(topo == 0)
-    score = 0
+    all_hashes = []
     for row, col in trailheads:
         pos_hash = day10_find(topo, row, col, 1)
-        unique = set(pos_hash)
-        score += len(unique)
+        all_hashes.append(pos_hash)
+    return all_hashes
+
+
+def day10_part1(fn: str):
+    score = 0
+    for cur_hash in day10_find_paths(fn):
+        score += len(set(cur_hash))
+    return score
+
+
+def day10_part2(fn: str):
+    score = 0
+    for cur_hash in day10_find_paths(fn):
+        score += len(cur_hash)
     return score
 
 
