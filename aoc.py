@@ -4,6 +4,7 @@ import re
 import sys
 import itertools
 import numpy as np
+from typing import List
 
 
 @dataclass
@@ -69,7 +70,7 @@ def read_file(fn):
     return s
 
 
-def read_file_as_lines(fn):
+def read_file_as_lines(fn) -> List[str]:
     lines = []
     with open(fn, "r") as file:
         for line in file:
@@ -834,6 +835,36 @@ def day9_part2(fn: str):
         res += block_idx * block_size * (block_pos + (block_pos + block_size - 1)) // 2
     # 8553014718259 too high
     return res
+
+
+def day10_find(topo, row, col, look_for):
+    dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+    pos_hash = []
+    for row_add, col_add in dirs:
+        new_row = row + row_add
+        new_col = col + col_add
+        if topo[new_row][new_col] == look_for:
+            if look_for == 9:
+                pos_hash.append(new_row * 1000 + new_col)
+            else:
+                pos_hash += day10_find(topo, new_row, new_col, look_for + 1)
+    return pos_hash
+
+
+def day10_part1(fn: str):
+    lines = read_file_as_lines(fn)
+    num_rows = len(lines)
+    num_cols = len(lines[0])
+    lines_as_ints = [[x for x in line] for line in lines]
+    topo = np.ones((num_rows + 2, num_cols + 2), dtype=int) * 10
+    topo[1 : num_rows + 1, 1 : num_cols + 1] = lines_as_ints
+    trailheads = np.argwhere(topo == 0)
+    score = 0
+    for row, col in trailheads:
+        pos_hash = day10_find(topo, row, col, 1)
+        unique = set(pos_hash)
+        score += len(unique)
+    return score
 
 
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
