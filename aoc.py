@@ -5,6 +5,7 @@ import sys
 import itertools
 import numpy as np
 from typing import List
+import copy
 
 
 @dataclass
@@ -1402,8 +1403,86 @@ def day15_part1(fn: str):
     return res
 
 
+def day15_temp_print_board(board, pos):
+    board_to_print = copy.deepcopy(board)
+    pos_row, pos_col = pos
+    board_to_print[pos_row][pos_col] = "@"
+    for line in board_to_print:
+        print("".join(line))
+
+
 def day15_part2(fn: str):
-    num_rows, num_cols, walls, boxes, moves, pos = day15_get_data(fn)
+    if fn.find("real") > -1:
+        return -1
+    num_rows, num_cols_orig, walls, boxes, moves, pos_orig = day15_get_data(fn)
+    pos_row, pos_orig_col = pos_orig
+    pos = (pos_row, pos_orig_col * 2)
+    num_cols = num_cols_orig * 2
+    board = [["."] * num_cols for _ in range(num_rows)]
+    for row, col_half in walls:
+        col_start = col_half * 2
+        board[row][col_start : col_start + 2] = "##"
+    for row, col_half in boxes:
+        col_start = col_half * 2
+        board[row][col_start : col_start + 2] = "[]"
+
+    day15_temp_print_board(board, pos)
+    for idx_move, (row_move, col_move) in enumerate(moves):
+        row_cur, col_cur = pos
+        char_cur = board[row_cur + row_move][col_cur + col_move]
+        if char_cur == ".":
+            pos = (row_cur + row_move, col_cur + col_move)
+        elif char_cur in ["[", "]"]:
+            if col_move != 0:
+                row_test = row_cur
+                for idx_test in range(1, max(num_rows, num_cols)):
+                    col_test = col_cur + idx_test * col_move
+                    cur_char = board[row_test][col_test]
+                    if cur_char == ".":
+                        for idx in range(idx_test):
+                            col = col_test - idx * col_move
+                            board[row_test][col] = board[row_test][col - col_move]
+                        pos = (row_cur, col_cur + col_move)
+                    elif cur_char == "#":
+                        break
+            if row_move != 0:
+                # Moving up/down is performed in two steps:
+                #   1. Find boxes that are connected. We register the leftmost piece of each box
+                #   2. For each box, check if it can move
+                if char_cur == "[":
+                    con_boxes = [(row_cur + row_move, col_cur)]
+                else:
+                    con_boxes = [(row_cur + row_move, col_cur - 1)]
+                idx_start = 0
+                idx_end_excl = len(con_boxes)
+                done = False
+                while not done:
+                    new_con = []
+                    for idx_con in range(idx_start, idx_end_excl):
+                        row_con, col_con = con_boxes[idx_con]
+                        char_same_col = board[row_con][col_con]
+                        char_next_col = board[row_con][col_con + 1]
+                        if char_same_col == "[":
+                            new_con.append((row_con + row_move, col_con))
+                        if char_same_col == "]":
+                            new_con.append((row_con + row_move, col_con - 1))
+                        if char_next_col == "[":
+                            new_con.append((row_con + row_move, col_con + 1))
+                    if len(new_con) > 0:
+                        new_con = list(dict.fromkeys(new_con))
+                        for n in new_con:
+                            con_boxes.append(n)
+                        idx_start = idx_end_excl
+                        idx_end_excl = idx_start + len(new_con)
+                    else:
+                        done = True
+                for row, col in con_boxes:
+                    pass
+                    # 1. Check if all boxes can move
+                    # 2. Perform move
+    day15_temp_print_board(board, pos)
+    res = 0
+    return res
 
 
 def day17_read_input(fn):
