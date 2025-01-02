@@ -1324,6 +1324,75 @@ def day14_part2(fn: str):
             input(f"Steps for image above: {step+1}")
 
 
+def day15_get_data(fn: str):
+    lines = read_file_as_lines(fn)
+    lines_board = []
+    lines_move = []
+    add_to_board = True
+    for line in lines:
+        if line == "":
+            add_to_board = False
+        else:
+            if add_to_board:
+                lines_board.append(line)
+            else:
+                lines_move.append(line)
+    num_rows = len(lines_board)
+    num_cols = len(lines_board[0])
+    board = [["."] * num_cols for _ in range(num_rows)]
+    pos = (0, 0)
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if lines_board[row][col] == "@":
+                pos = (row, col)
+                board[row][col] = "."
+            else:
+                board[row][col] = lines_board[row][col]
+    line_moves = "".join(lines_move)
+    moves = []
+    for c in line_moves:
+        if c == "<":
+            moves.append((0, -1))
+        if c == ">":
+            moves.append((0, 1))
+        if c == "v":
+            moves.append((1, 0))
+        if c == "^":
+            moves.append((-1, 0))
+    return num_rows, num_cols, board, moves, pos
+
+
+def day15_part1(fn: str):
+    num_rows, num_cols, board, moves, pos = day15_get_data(fn)
+    for row_move, col_move in moves:
+        cur_row, cur_col = pos
+        new_row = cur_row + row_move
+        new_col = cur_col + col_move
+        if board[new_row][new_col] == ".":
+            pos = (new_row, new_col)
+        elif board[new_row][new_col] == "O":
+            can_move = False
+            try_row = 0
+            try_col = 0
+            for idx in range(1, max(num_rows, num_cols)):
+                try_row = new_row + row_move * idx
+                try_col = new_col + col_move * idx
+                if board[try_row][try_col] == "#":
+                    break
+                if board[try_row][try_col] == ".":
+                    can_move = True
+                    break
+            if can_move:
+                board[try_row][try_col] = "O"
+                board[new_row][new_col] = "."
+                pos = (new_row, new_col)
+    asd = np.where(np.array(board) == "O")
+    res = 0
+    for row, col in zip(asd[0], asd[1]):
+        res += 100 * row + col
+    return res
+
+
 def day17_read_input(fn):
     lines = read_file_as_lines(fn)
     registers = []
