@@ -1339,15 +1339,19 @@ def day15_get_data(fn: str):
                 lines_move.append(line)
     num_rows = len(lines_board)
     num_cols = len(lines_board[0])
-    board = [["."] * num_cols for _ in range(num_rows)]
+    walls = []
+    boxes = []
     pos = (0, 0)
     for row in range(num_rows):
         for col in range(num_cols):
-            if lines_board[row][col] == "@":
-                pos = (row, col)
-                board[row][col] = "."
-            else:
-                board[row][col] = lines_board[row][col]
+            char = lines_board[row][col]
+            cur_pos = (row, col)
+            if char == "@":
+                pos = cur_pos
+            elif char == "#":
+                walls.append(cur_pos)
+            elif char == "O":
+                boxes.append(cur_pos)
     line_moves = "".join(lines_move)
     moves = []
     for c in line_moves:
@@ -1359,11 +1363,16 @@ def day15_get_data(fn: str):
             moves.append((1, 0))
         if c == "^":
             moves.append((-1, 0))
-    return num_rows, num_cols, board, moves, pos
+    return num_rows, num_cols, walls, boxes, moves, pos
 
 
 def day15_part1(fn: str):
-    num_rows, num_cols, board, moves, pos = day15_get_data(fn)
+    num_rows, num_cols, walls, boxes, moves, pos = day15_get_data(fn)
+    board = [["."] * num_cols for _ in range(num_rows)]
+    for row, col in walls:
+        board[row][col] = "#"
+    for row, col in boxes:
+        board[row][col] = "O"
     for row_move, col_move in moves:
         cur_row, cur_col = pos
         new_row = cur_row + row_move
@@ -1386,11 +1395,15 @@ def day15_part1(fn: str):
                 board[try_row][try_col] = "O"
                 board[new_row][new_col] = "."
                 pos = (new_row, new_col)
-    asd = np.where(np.array(board) == "O")
+    squares = np.where(np.array(board) == "O")
     res = 0
-    for row, col in zip(asd[0], asd[1]):
+    for row, col in zip(squares[0], squares[1]):
         res += 100 * row + col
     return res
+
+
+def day15_part2(fn: str):
+    num_rows, num_cols, walls, boxes, moves, pos = day15_get_data(fn)
 
 
 def day17_read_input(fn):
