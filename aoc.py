@@ -1169,12 +1169,6 @@ def day13_get_machines(fn: str):
     btn_a = []
     btn_b = []
     price = []
-    # the_ax = set()
-    # the_ay = set()
-    # the_bx = set()
-    # the_by = set()
-    # the_px = set()
-    # the_py = set()
     for idx in range(num_machines):
         line_a = lines[4 * idx]
         line_b = lines[4 * idx + 1]
@@ -1185,18 +1179,6 @@ def day13_get_machines(fn: str):
         btn_a.append((int(a_x), int(a_y)))
         btn_b.append((int(b_x), int(b_y)))
         price.append((int(p_x), int(p_y)))
-    #     the_ax.add(int(a_x))
-    #     the_ay.add(int(a_y))
-    #     the_bx.add(int(b_x))
-    #     the_by.add(int(b_y))
-    #     the_px.add(int(p_x))
-    #     the_py.add(int(p_y))
-    # print(min(the_ax), max(the_ax))
-    # print(min(the_ay), max(the_ay))
-    # print(min(the_bx), max(the_bx))
-    # print(min(the_by), max(the_by))
-    # print(min(the_px), max(the_px))
-    # print(min(the_py), max(the_py))
     return num_machines, btn_a, btn_b, price
 
 
