@@ -880,6 +880,53 @@ def day10_part2(fn: str):
     return score
 
 
+def day11_blink(stones, next_stone, cur_num_stones):
+    for idx in range(cur_num_stones):
+        as_string = str(stones[idx])
+        num_digits = len(as_string)
+        if stones[idx] == 0:
+            stones[idx] = 1
+        elif num_digits % 2 == 0:
+            num_left = int(as_string[: num_digits // 2])
+            num_right = int(as_string[num_digits // 2 :])
+            stones[cur_num_stones] = num_right
+            next_stone[cur_num_stones] = next_stone[idx]
+            stones[idx] = num_left
+            next_stone[idx] = cur_num_stones
+            cur_num_stones += 1
+        else:
+            stones[idx] = stones[idx] * 2024
+    return cur_num_stones
+
+
+def day11_sort(stones, next_stone):
+    idx = 0
+    done = False
+    ret = []
+    while not done:
+        ret.append(stones[idx])
+        idx = next_stone[idx]
+        if idx == -1:
+            done = True
+    return ret
+
+
+def day11_part1(fn: str):
+    line, _, _ = read_file_as_single_line(fn)
+    input_stones = [int(s) for s in line.split(" ")]
+    max_num_stones = 10000000
+    cur_num_stones = len(input_stones)
+    stones = np.zeros(max_num_stones, dtype=int)
+    next_stone = np.ones(max_num_stones, dtype=int) * -1
+    stones[0:cur_num_stones] = input_stones
+    for idx in range(cur_num_stones - 1):
+        next_stone[idx] = idx + 1
+    num_blinks = 25
+    for _ in range(num_blinks):
+        cur_num_stones = day11_blink(stones, next_stone, cur_num_stones)
+    return cur_num_stones
+
+
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
     # Segment map has True for each element that is part of the current segment
     # Pad the segment map with one element in each direction so we do not have
