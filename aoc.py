@@ -1182,36 +1182,56 @@ def day13_get_machines(fn: str):
     return num_machines, btn_a, btn_b, price
 
 
+def day13_solve(a, b, price, val_to_add=0):
+    ax, ay = a
+    bx, by = b
+    px, py = price
+    px += val_to_add
+    py += val_to_add
+    # Solve a simple linear system with two variables
+    # 1. Multiply first line with "x" variable of second line
+    #   so we can remove the A variable from the equation
+    bx *= ay
+    px *= ay
+    by *= ax
+    py *= ax
+    # 2. Subtract second equation from first equation
+    bx -= by
+    px -= py
+    # 3. Calculate B
+    num_b_real = px / bx
+    # 4. Calculate A using B
+    ax, ay = a
+    bx, by = b
+    px, py = price
+    px += val_to_add
+    py += val_to_add
+    num_a_real = (px - bx * num_b_real) / ax
+    num_a = int(num_a_real)
+    num_b = int(num_b_real)
+    num_err_tolerance = 0.000001
+    x_is_int = abs(num_a_real - num_a) < num_err_tolerance
+    y_is_int = abs(num_b_real - num_b) < num_err_tolerance
+    is_valid = x_is_int and y_is_int
+    return is_valid, num_a, num_b
+
+
 def day13_part1(fn: str):
     num_machines, btn_a, btn_b, price = day13_get_machines(fn)
     total_cost = 0
     for idx, (cur_a, cur_b, cur_price) in enumerate(zip(btn_a, btn_b, price)):
-        ax, ay = cur_a
-        bx, by = cur_b
-        px, py = cur_price
-        # Solve a simple linear system with two variables
-        # 1. Multiply first line with "x" variable of second line
-        #   so we can remove the A variable from the equation
-        bx *= ay
-        px *= ay
-        by *= ax
-        py *= ax
-        # 2. Subtract second equation from first equation
-        bx -= by
-        px -= py
-        # 3. Calculate B
-        num_b_real = px / bx
-        # 4. Calculate A using B
-        ax, ay = cur_a
-        bx, by = cur_b
-        px, py = cur_price
-        num_a_real = (px - bx * num_b_real) / ax
-        num_a = int(num_a_real)
-        num_b = int(num_b_real)
-        num_err_tolerance = 0.000001
-        x_is_int = abs(num_a_real - num_a) < num_err_tolerance
-        y_is_int = abs(num_b_real - num_b) < num_err_tolerance
-        is_valid = x_is_int and y_is_int
+        is_valid, num_a, num_b = day13_solve(cur_a, cur_b, cur_price)
+        if is_valid:
+            cost = 3 * num_a + 1 * num_b
+            total_cost += cost
+    return total_cost
+
+
+def day13_part2(fn: str):
+    num_machines, btn_a, btn_b, price = day13_get_machines(fn)
+    total_cost = 0
+    for idx, (cur_a, cur_b, cur_price) in enumerate(zip(btn_a, btn_b, price)):
+        is_valid, num_a, num_b = day13_solve(cur_a, cur_b, cur_price, 10000000000000)
         if is_valid:
             cost = 3 * num_a + 1 * num_b
             total_cost += cost
