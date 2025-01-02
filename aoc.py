@@ -1144,6 +1144,27 @@ def day12_part2(fn):
     return total_score
 
 
+def day13_get_machines(fn: str):
+    lines = read_file_as_lines(fn)
+    num_machines = (len(lines) + 1) // 4
+    btn_a = []
+    btn_b = []
+    price = []
+    for idx in range(num_machines):
+        line_a = lines[4 * idx]
+        line_b = lines[4 * idx + 1]
+        line_price = lines[4 * idx + 2]
+        btn_a.append((int(line_a[12:14]), int(line_a[18:20])))
+        btn_b.append((int(line_b[12:14]), int(line_b[18:20])))
+        x_s, y_s = line_price.split("Prize: X=")[1].split(", Y=")
+        price.append((int(x_s), int(y_s)))
+    return num_machines, btn_a, btn_b, price
+
+
+def day13_part1(fn: str):
+    num_machines, btn_a, btn_b, price = day13_get_machines(fn)
+
+
 def day17_read_input(fn):
     lines = read_file_as_lines(fn)
     registers = []
