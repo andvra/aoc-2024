@@ -961,6 +961,35 @@ def day17_read_input(fn):
     return registers, op_list
 
 
+def day17_run_program(registers, cmd, literal):
+    new_idx_op = None
+    new_output_val = None
+    combo = 0
+    if literal <= 3:
+        combo = literal
+    elif combo <= 6:
+        combo = registers[literal - 4]
+    match cmd:
+        case 0:
+            registers[0] = registers[0] >> combo
+        case 1:
+            registers[1] = registers[1] ^ literal
+        case 2:
+            registers[1] = combo % 8
+        case 3:
+            if registers[0] != 0:
+                new_idx_op = literal
+        case 4:
+            registers[1] = registers[1] ^ registers[2]
+        case 5:
+            new_output_val = combo % 8
+        case 6:
+            registers[1] = registers[0] >> combo
+        case 7:
+            registers[2] = registers[0] >> combo
+    return new_idx_op, new_output_val
+
+
 def day17_part1(fn):
     registers, op_list = day17_read_input(fn)
     done = False
@@ -968,35 +997,12 @@ def day17_part1(fn):
     output_vals = []
     while not done:
         cmd, literal = op_list[idx_op]
-        combo = 0
-        if literal <= 3:
-            combo = literal
-        elif combo <= 6:
-            combo = registers[literal - 4]
-        else:
-            print("ERROR")
-        match cmd:
-            case 0:
-                the_pow = 2**combo
-                registers[0] = registers[0] // the_pow
-            case 1:
-                registers[1] = registers[1] ^ literal
-            case 2:
-                registers[1] = combo % 8
-            case 3:
-                if registers[0] != 0:
-                    idx_op = literal
-                    continue
-            case 4:
-                registers[1] = registers[1] ^ registers[2]
-            case 5:
-                output_vals.append(combo % 8)
-            case 6:
-                the_pow = 2**combo
-                registers[1] = registers[0] // the_pow
-            case 7:
-                the_pow = 2**combo
-                registers[2] = registers[0] // the_pow
+        new_idx_op, new_output_val = day17_run_program(registers, cmd, literal)
+        if new_idx_op != None:
+            idx_op = new_idx_op
+            continue
+        if new_output_val != None:
+            output_vals.append(new_output_val)
         idx_op = idx_op + 1
         if idx_op >= len(op_list):
             done = True
@@ -1006,11 +1012,46 @@ def day17_part1(fn):
 
 def day17_part2(fn):
     registers, op_list = day17_read_input(fn)
-    return 0
+    res = 0
+    program = [val for op in op_list for val in op]
+    print("Program: ", program)
+    num_levels = len(program)
+
+    # Output is 3-bit, meaning we have 7 overlapping bits between input of two
+    #   adjacent outputs
+    output_to_input = [[] for _ in range(8)]
+    for a_val in range(1024):
+        registers[0] = a_val
+        for cmd, literal in op_list:
+            _, new_output_val = day17_run_program(registers, cmd, literal)
+            if new_output_val != None:
+                output_to_input[new_output_val].append(a_val)
+    combos_per_level = [[] for _ in range(num_levels)]
+    [combos_per_level[0].append([x]) for x in output_to_input[program[-1]]]
+    for idx_level in range(1, num_levels):
+        desired_output = program[-idx_level - 1]
+        for low_list in combos_per_level[idx_level - 1]:
+            val_low = low_list[-1]
+            for val_high in output_to_input[desired_output]:
+                if ((val_low >> 3) & 0b1111111) == (val_high & 0b1111111):
+                    combos_per_level[idx_level].append(low_list + [val_high])
+        print(
+            f"Ran level {idx_level} with desired output {desired_output}. Got {len(combos_per_level[idx_level])} combos"
+        )
+
+    all_possible_vals = []
+    for ok_combos in combos_per_level[-1]:
+        the_val = 0
+        for idx_level in range(num_levels):
+            the_val |= ok_combos[idx_level] << (idx_level * 3)
+        all_possible_vals.append(the_val)
+
+    all_possible_vals.sort()
+    smallest = all_possible_vals[0]
+    return smallest
 
 
-def aoc_2024():
-    run_real = True
+def aoc_2024(run_real=True, single_day=None):
     day_start = 1
     day_end_excl = 26
     if single_day != None:
@@ -1036,6 +1077,6 @@ def aoc_2024():
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1].isdigit():
         single_day = int(sys.argv[1])
-        aoc_2024(single_day)
+        aoc_2024(single_day=single_day)
     else:
         aoc_2024()
