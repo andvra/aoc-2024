@@ -764,6 +764,25 @@ def day9_as_blocks(line):
     return blocks
 
 
+def day9_blocks_and_free(line):
+    blocks = []
+    free = []
+    if len(line) % 2 != 0:
+        line += "0"
+    idx_pos = 0
+    for idx_block, (block_size_string, free_size_string) in enumerate(
+        zip(line[::2], line[1::2])
+    ):
+        block_size = int(block_size_string)
+        free_size = int(free_size_string)
+        blocks.append((idx_pos, idx_block, block_size))
+        idx_pos += block_size
+        if free_size > 0:
+            free.append((idx_pos, free_size))
+            idx_pos += free_size
+    return blocks, free
+
+
 def day9_blocks_to_list(blocks):
     s = []
     for idx, (block_size, block_space) in enumerate(blocks):
@@ -799,7 +818,22 @@ def day9_part1(fn: str):
     res = 0
     for idx in range(num_num):
         res += int(blocks_as_list[idx]) * idx
-    print(res)
+    return res
+
+
+def day9_part2(fn: str):
+    line, _, _ = read_file_as_single_line(fn)
+    blocks, free = day9_blocks_and_free(line)
+    res = 0
+    for block_pos, block_idx, block_size in blocks[::-1]:
+        for free_idx, (free_pos, free_size) in enumerate(free):
+            if free_size - block_size >= 0:
+                block_pos = free_pos
+                free[free_idx] = (free_pos + block_size, free_size - block_size)
+                break
+        res += block_idx * block_size * (block_pos + (block_pos + block_size - 1)) // 2
+    # 8553014718259 too high
+    return res
 
 
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
