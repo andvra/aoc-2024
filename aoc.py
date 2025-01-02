@@ -880,25 +880,6 @@ def day10_part2(fn: str):
     return score
 
 
-def day11_blink(stones, next_stone, cur_num_stones):
-    for idx in range(cur_num_stones):
-        as_string = str(stones[idx])
-        num_digits = len(as_string)
-        if stones[idx] == 0:
-            stones[idx] = 1
-        elif num_digits % 2 == 0:
-            num_left = int(as_string[: num_digits // 2])
-            num_right = int(as_string[num_digits // 2 :])
-            stones[cur_num_stones] = num_right
-            next_stone[cur_num_stones] = next_stone[idx]
-            stones[idx] = num_left
-            next_stone[idx] = cur_num_stones
-            cur_num_stones += 1
-        else:
-            stones[idx] = stones[idx] * 2024
-    return cur_num_stones
-
-
 def day11_sort(stones, next_stone):
     idx = 0
     done = False
@@ -911,20 +892,70 @@ def day11_sort(stones, next_stone):
     return ret
 
 
-def day11_part1(fn: str):
+def day11_blink(fn: str, num_blinks):
     line, _, _ = read_file_as_single_line(fn)
     input_stones = [int(s) for s in line.split(" ")]
-    max_num_stones = 10000000
+    max_num_stones = 100000000
     cur_num_stones = len(input_stones)
     stones = np.zeros(max_num_stones, dtype=int)
     next_stone = np.ones(max_num_stones, dtype=int) * -1
+    num_digits = np.zeros(max_num_stones, dtype=int)
     stones[0:cur_num_stones] = input_stones
+    num_to_left_right = {}
+    num_to_multiply = {}
     for idx in range(cur_num_stones - 1):
         next_stone[idx] = idx + 1
-    num_blinks = 25
-    for _ in range(num_blinks):
-        cur_num_stones = day11_blink(stones, next_stone, cur_num_stones)
+    for idx in range(cur_num_stones):
+        num_digits[idx] = len(str(stones[idx]))
+    for idx in range(num_blinks):
+        print(idx, end=" ", flush=True)
+        for idx in range(cur_num_stones):
+            cur_num_digits = num_digits[idx]
+            if stones[idx] == 0:
+                stones[idx] = 1
+            elif cur_num_digits % 2 == 0:
+                if stones[idx] in num_to_left_right:
+                    num_left, num_right, num_dig_left, num_dig_right = (
+                        num_to_left_right[stones[idx]]
+                    )
+                else:
+                    as_string = str(stones[idx])
+                    num_left = int(as_string[: cur_num_digits // 2])
+                    num_right = int(as_string[cur_num_digits // 2 :])
+                    num_dig_left = len(str(num_left))
+                    num_dig_right = len(str(num_right))
+                    num_to_left_right[stones[idx]] = (
+                        num_left,
+                        num_right,
+                        num_dig_left,
+                        num_dig_right,
+                    )
+                stones[cur_num_stones] = num_right
+                next_stone[cur_num_stones] = next_stone[idx]
+                num_digits[cur_num_stones] = num_dig_right
+                stones[idx] = num_left
+                next_stone[idx] = cur_num_stones
+                num_digits[idx] = num_dig_left
+                cur_num_stones += 1
+            else:
+                if stones[idx] in num_to_multiply:
+                    val, num_dig = num_to_multiply[stones[idx]]
+                else:
+                    val = stones[idx] * 2024
+                    num_dig = len(str(val))
+                    num_to_multiply[stones[idx]] = (val, num_dig)
+                stones[idx] = val
+                num_digits[idx] = num_dig
+    print()
     return cur_num_stones
+
+
+def day11_part1(fn: str):
+    return day11_blink(fn, 25)
+
+
+def day11_part2(fn: str):
+    return day11_blink(fn, 75)
 
 
 def day12_floodfill(garden, is_taken, num_rows, num_cols, start_row, start_col) -> int:
