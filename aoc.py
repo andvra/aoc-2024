@@ -1251,6 +1251,14 @@ def day14_get_input(fn: str):
     return len(lines), positions, velocities
 
 
+def day14_as_image(rows, cols, pos):
+    image = [["."] * cols for _ in range(rows)]
+    for row, col in pos:
+        image[row][col] = "P"
+    image = image[::2][::2]
+    return image
+
+
 def day14_part1(fn: str):
     num_robots, pos, vel = day14_get_input(fn)
     rows, cols = 103, 101
@@ -1284,7 +1292,36 @@ def day14_part1(fn: str):
             ok_col = pcol >= scol and pcol <= ecol
             if ok_row and ok_col:
                 num_in_quad[idx] += 1
+
     return math.prod(num_in_quad)
+
+
+def day14_part2(fn: str):
+    if fn.find("test") > -1:
+        return -1
+    num_robots, pos, vel = day14_get_input(fn)
+    rows, cols = 103, 101
+    num_steps = 100000
+    num_buckets = 10
+    num_vals = np.zeros((num_buckets, num_buckets), dtype=int)
+    for step in range(num_steps):
+        num_vals[:, :] = 0
+        for idx_robot in range(num_robots):
+            new_row = (pos[idx_robot][0] + vel[idx_robot][0] + rows) % rows
+            new_col = (pos[idx_robot][1] + vel[idx_robot][1] + cols) % cols
+            pos[idx_robot] = (new_row, new_col)
+            if new_row < 100 and new_col < 100:
+                num_vals[new_row // 10][new_col // 10] += 1
+        the_small = np.where(num_vals[:, :] < 3)
+        num_small = len(the_small[0])
+        # NB number below, as well as limit for low noise area, is defined after testing
+        if num_small > 60:
+            image = day14_as_image(rows, cols, pos)
+            for row in image:
+                for col in row:
+                    print(col, end="")
+                print()
+            input(f"Steps for image above: {step+1}")
 
 
 def day17_read_input(fn):
