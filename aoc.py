@@ -1238,6 +1238,55 @@ def day13_part2(fn: str):
     return total_cost
 
 
+def day14_get_input(fn: str):
+    lines = read_file_as_lines(fn)
+    positions = []
+    velocities = []
+    for line in lines:
+        pos, vel = line.split("p=")[1].split(" v=")
+        pos_col_s, pos_row_s = pos.split(",")
+        vel_col_s, vel_row_s = vel.split(",")
+        positions.append((int(pos_row_s), int(pos_col_s)))
+        velocities.append((int(vel_row_s), int(vel_col_s)))
+    return len(lines), positions, velocities
+
+
+def day14_part1(fn: str):
+    num_robots, pos, vel = day14_get_input(fn)
+    rows, cols = 103, 101
+    num_steps = 100
+    for step in range(num_steps):
+        for idx_robot in range(num_robots):
+            new_row = (pos[idx_robot][0] + vel[idx_robot][0] + rows) % rows
+            new_col = (pos[idx_robot][1] + vel[idx_robot][1] + cols) % cols
+            pos[idx_robot] = (new_row, new_col)
+    num_in_quad = [0, 0, 0, 0]
+    half_cols = cols // 2
+    half_rows = rows // 2
+    quad_start = [
+        (0, 0),
+        (0, half_cols + 1),
+        (half_rows + 1, 0),
+        (half_rows + 1, half_cols + 1),
+    ]
+    quad_end = [
+        (half_rows - 1, half_cols - 1),
+        (half_rows - 1, cols - 1),
+        (rows - 1, half_cols - 1),
+        (rows - 1, cols - 1),
+    ]
+    for cur_pos in pos:
+        prow, pcol = cur_pos
+        for idx in range(4):
+            srow, scol = quad_start[idx]
+            erow, ecol = quad_end[idx]
+            ok_row = prow >= srow and prow <= erow
+            ok_col = pcol >= scol and pcol <= ecol
+            if ok_row and ok_col:
+                num_in_quad[idx] += 1
+    return math.prod(num_in_quad)
+
+
 def day17_read_input(fn):
     lines = read_file_as_lines(fn)
     registers = []
