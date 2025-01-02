@@ -59,6 +59,25 @@ class Point2i:
         )
 
 
+def gcd(val1: int, val2: int) -> int:
+    if val1 == 0 and val2 == 0:
+        return -1
+    if val1 == 0:
+        return val2
+    if val2 == 0:
+        return val1
+    if val1 == val2:
+        return val1
+    if val1 > val2:
+        return gcd(val2, val1 % val2)
+    else:
+        return gcd(val1, val2 % val1)
+
+
+def lcm(val1: int, val2: int) -> int:
+    return int(abs(val1) * (abs(val2) / gcd(val1, val2)))
+
+
 def all_occurences_in_string(s, c):
     return [i for i in range(len(s)) if s[i] == c]
 
@@ -1150,19 +1169,71 @@ def day13_get_machines(fn: str):
     btn_a = []
     btn_b = []
     price = []
+    # the_ax = set()
+    # the_ay = set()
+    # the_bx = set()
+    # the_by = set()
+    # the_px = set()
+    # the_py = set()
     for idx in range(num_machines):
         line_a = lines[4 * idx]
         line_b = lines[4 * idx + 1]
         line_price = lines[4 * idx + 2]
-        btn_a.append((int(line_a[12:14]), int(line_a[18:20])))
-        btn_b.append((int(line_b[12:14]), int(line_b[18:20])))
-        x_s, y_s = line_price.split("Prize: X=")[1].split(", Y=")
-        price.append((int(x_s), int(y_s)))
+        a_x, a_y = line_a.split("Button A: X+")[1].split(", Y+")
+        b_x, b_y = line_b.split("Button B: X+")[1].split(", Y+")
+        p_x, p_y = line_price.split("Prize: X=")[1].split(", Y=")
+        btn_a.append((int(a_x), int(a_y)))
+        btn_b.append((int(b_x), int(b_y)))
+        price.append((int(p_x), int(p_y)))
+    #     the_ax.add(int(a_x))
+    #     the_ay.add(int(a_y))
+    #     the_bx.add(int(b_x))
+    #     the_by.add(int(b_y))
+    #     the_px.add(int(p_x))
+    #     the_py.add(int(p_y))
+    # print(min(the_ax), max(the_ax))
+    # print(min(the_ay), max(the_ay))
+    # print(min(the_bx), max(the_bx))
+    # print(min(the_by), max(the_by))
+    # print(min(the_px), max(the_px))
+    # print(min(the_py), max(the_py))
     return num_machines, btn_a, btn_b, price
 
 
 def day13_part1(fn: str):
     num_machines, btn_a, btn_b, price = day13_get_machines(fn)
+    total_cost = 0
+    for idx, (cur_a, cur_b, cur_price) in enumerate(zip(btn_a, btn_b, price)):
+        ax, ay = cur_a
+        bx, by = cur_b
+        px, py = cur_price
+        # Solve a simple linear system with two variables
+        # 1. Multiply first line with "x" variable of second line
+        #   so we can remove the A variable from the equation
+        bx *= ay
+        px *= ay
+        by *= ax
+        py *= ax
+        # 2. Subtract second equation from first equation
+        bx -= by
+        px -= py
+        # 3. Calculate B
+        num_b_real = px / bx
+        # 4. Calculate A using B
+        ax, ay = cur_a
+        bx, by = cur_b
+        px, py = cur_price
+        num_a_real = (px - bx * num_b_real) / ax
+        num_a = int(num_a_real)
+        num_b = int(num_b_real)
+        num_err_tolerance = 0.000001
+        x_is_int = abs(num_a_real - num_a) < num_err_tolerance
+        y_is_int = abs(num_b_real - num_b) < num_err_tolerance
+        is_valid = x_is_int and y_is_int
+        if is_valid:
+            cost = 3 * num_a + 1 * num_b
+            total_cost += cost
+    return total_cost
 
 
 def day17_read_input(fn):
