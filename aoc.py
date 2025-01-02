@@ -1478,7 +1478,7 @@ def day15_part2(fn: str):
                         done = True
                 for row, col in con_boxes:
                     pass
-                    # 1. Check if all boxes can move
+                    # 1. Check if all boxes can move. That is, both the squares above/below are empty or another box
                     # 2. Perform move
     day15_temp_print_board(board, pos)
     res = 0
