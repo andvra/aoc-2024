@@ -205,7 +205,7 @@ def day2_part2(fn):
 
 
 def day3_result_from_line(line):
-    start_indices = [m.start() for m in re.finditer("mul\(", line)]
+    start_indices = [m.start() for m in re.finditer(r"mul\(", line)]
     result = 0
     for idx_start in start_indices:
         idx_end = line.find(")", idx_start)
