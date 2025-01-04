@@ -1491,6 +1491,81 @@ def day15_part2(fn: str):
     return res
 
 
+def day16_pos_to_hash(row, col, new_row_move, new_col_move):
+    return row * 1000000 + col * 1000 + new_row_move * 100 + new_col_move
+
+
+def day16_part1(fn: str):
+    board = read_file_as_lines(fn)
+    num_rows = len(board)
+    num_cols = len(board[0])
+    flat = "".join(board)
+    pos_s = flat.find("S")
+    pos_e = flat.find("E")
+    pos_start = (pos_s // num_rows, pos_s % num_cols)
+    pos_end = (pos_e // num_rows, pos_e % num_cols)
+    heads = [pos_start + (0, 1, 0), pos_start + (-1, 0, 1000)]
+    used = [0] * len(heads)
+    done = False
+    possible_scores = []
+    old_moves = set()
+    idx_step = 0
+    board_write = []
+    for line in board:
+        board_write.append(list(line))
+    while not done:
+        idx_best = -1
+        score_best = 1000000000
+        for idx_used in range(len(used)):
+            if used[idx_used] == 0:
+                _, _, _, _, cur_score = heads[idx_used]
+                if cur_score < score_best:
+                    idx_best = idx_used
+                    score_best = cur_score
+        if idx_best == -1:
+            done = True
+        else:
+            row, col, row_move, col_move, score = heads[idx_best]
+            left_row_move = -col_move
+            left_col_move = row_move
+            right_row_move = -left_row_move
+            right_col_move = -left_col_move
+            for _ in range(1, num_rows):
+                row += row_move
+                col += col_move
+                score += 1
+                if board[row][col] == "#":
+                    break
+                if board[row][col] == "E":
+                    possible_scores.append(score)
+                    break
+                board_write[row][col] = "X"
+                if board[row + left_row_move][col + left_col_move] == ".":
+                    hash = day16_pos_to_hash(row, col, left_row_move, left_col_move)
+                    if hash not in old_moves:
+                        new_score = score + 1000
+                        new_head = (row, col, left_row_move, left_col_move, new_score)
+                        heads.append(new_head)
+                        used.append(0)
+                        old_moves.add(hash)
+                if board[row + right_row_move][col + right_col_move] == ".":
+                    hash = day16_pos_to_hash(row, col, right_row_move, right_col_move)
+                    if hash not in old_moves:
+                        new_score = score + 1000
+                        new_head = (row, col, right_row_move, right_col_move, new_score)
+                        heads.append(new_head)
+                        used.append(0)
+                        old_moves.add(hash)
+            used[idx_best] = 1
+        idx_step += 1
+        if False:
+            for line in board_write:
+                print("".join(line))
+            input("Press any key")
+    print(possible_scores)
+    return min(possible_scores)  #  91468 too high
+
+
 def day17_read_input(fn):
     lines = read_file_as_lines(fn)
     registers = []
