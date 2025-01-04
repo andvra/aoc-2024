@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 from typing import List
 import copy
+import time
 
 
 @dataclass
@@ -1504,10 +1505,14 @@ def day16_part1(fn: str):
     pos_e = flat.find("E")
     pos_start = (pos_s // num_rows, pos_s % num_cols)
     pos_end = (pos_e // num_rows, pos_e % num_cols)
-    heads = [pos_start + (0, 1, 0)]
+    max_num_heads = 10000
+    heads = [()] * max_num_heads
+    heads[0] = pos_start + (0, 1, 0)
+    num_heads = 1
     if board[pos_start[0] - 1][pos_start[1]] == ".":
-        heads.append((pos_start + (-1, 0, 1000)))
-    used = [0] * len(heads)
+        heads[1] = pos_start + (-1, 0, 1000)
+        num_heads += 1
+    used = [0] * max_num_heads
     done = False
     possible_scores = []
     old_moves = {}
@@ -1517,7 +1522,7 @@ def day16_part1(fn: str):
     while not done:
         idx_best = -1
         score_best = 1000000000
-        for idx_used in range(len(used)):
+        for idx_used in range(num_heads):
             if used[idx_used] == 0:
                 _, _, _, _, cur_score = heads[idx_used]
                 if cur_score < score_best:
@@ -1546,19 +1551,27 @@ def day16_part1(fn: str):
                     if (hash not in old_moves) or old_moves[hash] > score:
                         new_score = score + 1000
                         new_head = (row, col, left_row_move, left_col_move, new_score)
-                        heads.append(new_head)
-                        used.append(0)
+                        heads[num_heads] = new_head
+                        used[num_heads] = 0
                         old_moves[hash] = score
+                        num_heads += 1
                 if board[row + right_row_move][col + right_col_move] == ".":
                     hash = day16_pos_to_hash(row, col, right_row_move, right_col_move)
                     if (hash not in old_moves) or old_moves[hash] > score:
                         new_score = score + 1000
                         new_head = (row, col, right_row_move, right_col_move, new_score)
-                        heads.append(new_head)
-                        used.append(0)
+                        heads[num_heads] = new_head
+                        used[num_heads] = 0
                         old_moves[hash] = score
+                        num_heads += 1
             used[idx_best] = 1
     return min(possible_scores)
+
+
+def day16_part2(fn: str):
+    if fn.find("real") > -1:
+        return -1
+    return 0
 
 
 def day17_read_input(fn):
@@ -1673,6 +1686,7 @@ def aoc_2024(run_real=True, single_day=None):
     if single_day != None:
         day_start = single_day
         day_end_excl = single_day + 1
+    t_start = time.time()
     for num_day in range(day_start, day_end_excl):
         fn_test = f"input/day{num_day}-test.txt"
         fn_real = f"input/day{num_day}-real.txt"
@@ -1688,6 +1702,8 @@ def aoc_2024(run_real=True, single_day=None):
             if run_real:
                 res_real = func(fn_real)
             print(f"Day {num_day} (part {part}): {res_test} / {res_real}")
+    t_end = time.time()
+    print("Elapsed time (s):", int(10000 * (t_end - t_start)) / 10000)
 
 
 if __name__ == "__main__":
