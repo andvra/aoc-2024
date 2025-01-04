@@ -1403,7 +1403,7 @@ def day15_part1(fn: str):
     return res
 
 
-def day15_temp_print_board(board, pos):
+def day15_print_board(board, pos):
     board_to_print = copy.deepcopy(board)
     pos_row, pos_col = pos
     board_to_print[pos_row][pos_col] = "@"
@@ -1412,8 +1412,6 @@ def day15_temp_print_board(board, pos):
 
 
 def day15_part2(fn: str):
-    if fn.find("real") > -1:
-        return -1
     num_rows, num_cols_orig, walls, boxes, moves, pos_orig = day15_get_data(fn)
     pos_row, pos_orig_col = pos_orig
     pos = (pos_row, pos_orig_col * 2)
@@ -1426,7 +1424,6 @@ def day15_part2(fn: str):
         col_start = col_half * 2
         board[row][col_start : col_start + 2] = "[]"
 
-    day15_temp_print_board(board, pos)
     for idx_move, (row_move, col_move) in enumerate(moves):
         row_cur, col_cur = pos
         char_cur = board[row_cur + row_move][col_cur + col_move]
@@ -1443,6 +1440,7 @@ def day15_part2(fn: str):
                             col = col_test - idx * col_move
                             board[row_test][col] = board[row_test][col - col_move]
                         pos = (row_cur, col_cur + col_move)
+                        break
                     elif cur_char == "#":
                         break
             if row_move != 0:
@@ -1460,8 +1458,8 @@ def day15_part2(fn: str):
                     new_con = []
                     for idx_con in range(idx_start, idx_end_excl):
                         row_con, col_con = con_boxes[idx_con]
-                        char_same_col = board[row_con][col_con]
-                        char_next_col = board[row_con][col_con + 1]
+                        char_same_col = board[row_con + row_move][col_con]
+                        char_next_col = board[row_con + row_move][col_con + 1]
                         if char_same_col == "[":
                             new_con.append((row_con + row_move, col_con))
                         if char_same_col == "]":
@@ -1476,12 +1474,20 @@ def day15_part2(fn: str):
                         idx_end_excl = idx_start + len(new_con)
                     else:
                         done = True
+                can_move = True
                 for row, col in con_boxes:
-                    pass
-                    # 1. Check if all boxes can move. That is, both the squares above/below are empty or another box
-                    # 2. Perform move
-    day15_temp_print_board(board, pos)
+                    cur_pieces = board[row + row_move][col : col + 2]
+                    if "#" in cur_pieces:
+                        can_move = False
+                if can_move:
+                    for row, col in con_boxes[::-1]:
+                        board[row + row_move][col : col + 2] = "[]"
+                        board[row][col : col + 2] = ".."
+                    pos = (row_cur + row_move, col_cur)
+    squares = np.where(np.array(board) == "[")
     res = 0
+    for row, col in zip(squares[0], squares[1]):
+        res += 100 * row + col
     return res
 
 
