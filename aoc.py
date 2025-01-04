@@ -1504,12 +1504,13 @@ def day16_part1(fn: str):
     pos_e = flat.find("E")
     pos_start = (pos_s // num_rows, pos_s % num_cols)
     pos_end = (pos_e // num_rows, pos_e % num_cols)
-    heads = [pos_start + (0, 1, 0), pos_start + (-1, 0, 1000)]
+    heads = [pos_start + (0, 1, 0)]
+    if board[pos_start[0] - 1][pos_start[1]] == ".":
+        heads.append((pos_start + (-1, 0, 1000)))
     used = [0] * len(heads)
     done = False
     possible_scores = []
-    old_moves = set()
-    idx_step = 0
+    old_moves = {}
     board_write = []
     for line in board:
         board_write.append(list(line))
@@ -1542,28 +1543,22 @@ def day16_part1(fn: str):
                 board_write[row][col] = "X"
                 if board[row + left_row_move][col + left_col_move] == ".":
                     hash = day16_pos_to_hash(row, col, left_row_move, left_col_move)
-                    if hash not in old_moves:
+                    if (hash not in old_moves) or old_moves[hash] > score:
                         new_score = score + 1000
                         new_head = (row, col, left_row_move, left_col_move, new_score)
                         heads.append(new_head)
                         used.append(0)
-                        old_moves.add(hash)
+                        old_moves[hash] = score
                 if board[row + right_row_move][col + right_col_move] == ".":
                     hash = day16_pos_to_hash(row, col, right_row_move, right_col_move)
-                    if hash not in old_moves:
+                    if (hash not in old_moves) or old_moves[hash] > score:
                         new_score = score + 1000
                         new_head = (row, col, right_row_move, right_col_move, new_score)
                         heads.append(new_head)
                         used.append(0)
-                        old_moves.add(hash)
+                        old_moves[hash] = score
             used[idx_best] = 1
-        idx_step += 1
-        if False:
-            for line in board_write:
-                print("".join(line))
-            input("Press any key")
-    print(possible_scores)
-    return min(possible_scores)  #  91468 too high
+    return min(possible_scores)
 
 
 def day17_read_input(fn):
