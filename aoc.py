@@ -1511,13 +1511,13 @@ def day16_unique_squares(head_parents, heads, idx_first):
         num_new = 0
         for idx in range(idx_start, idx_end_excl):
             idx_head = idx_search[idx]
-            if idx_head == 1:
+            if not idx_head in head_parents:
                 done = True
                 break
             row, col, _, _, _ = heads[idx_head]
             for idx_parent in head_parents[idx_head]:
                 row_parent, col_parent, row_move, col_move, _ = heads[idx_parent]
-                for iter in range(abs(row_parent - row) + abs(col_parent - col)):
+                for iter in range(abs(row_parent - row) + abs(col_parent - col) + 1):
                     new_row = row_parent + iter * row_move
                     new_col = col_parent + iter * col_move
                     new_hash = new_row * 1000 + new_col
@@ -1624,27 +1624,15 @@ def day16_move(fn: str):
 
 def day16_part1(fn: str):
     best_score, _, _, _, _ = day16_move(fn)
-    print("We want 7036 / 91464")
     return best_score
 
 
 def day16_part2(fn: str):
-    # if fn.find("real") > -1:
-    #     return -1
     _, best_score_heads, head_parents, heads, board = day16_move(fn)
     all_squares = set()
     for idx_head in best_score_heads:
         all_squares.update(day16_unique_squares(head_parents, heads, idx_head))
-    board_write = []
-    for line in board:
-        board_write.append(list(line))
-    for square in all_squares:
-        row = square // 1000
-        col = square % 1000
-        board_write[row][col] = "O"
-    # for line in board_write:
-    #     print("".join(line))
-    return len(all_squares) + 1
+    return len(all_squares)
 
 
 def day17_read_input(fn):
