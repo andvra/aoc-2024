@@ -430,7 +430,8 @@ def day14_part2(fn: str):
                 for col in row:
                     print(col, end="")
                 print()
-            input(f"Steps for image above: {step+1}")
+            return step + 1
+            # input(f"Steps for image above: {step+1}")
 
 
 def day15_get_data(fn: str):
@@ -848,14 +849,6 @@ def day17_part2(fn):
     return smallest
 
 
-def day18_print_grid(grid_size, coords, num_coords):
-    chars = [["."] * grid_size for _ in range(grid_size)]
-    for row, col in coords[:num_coords]:
-        chars[row][col] = "#"
-    for line in chars:
-        print("".join(line))
-
-
 def day18_part1(fn: str):
     lines = read_file_as_lines(fn)
     coords = []
@@ -869,7 +862,6 @@ def day18_part1(fn: str):
     if fn.find("real") > -1:
         grid_size = 71
         num_coords_to_use = 1024
-    # day18_print_grid(grid_size, coords, 12)
     pos_start = (1, 1)
     pos_end = (grid_size, grid_size)
     # Adding padding
@@ -883,6 +875,8 @@ def day18_part1(fn: str):
     to_expand_end = set()
     to_expand_start.add(pos_start)
     to_expand_end.add(pos_end)
+    grid[pos_start[0]][pos_start[1]] = (0, 1000000)
+    grid[pos_end[0]][pos_end[1]] = (1000000, 0)
     done = False
     steps_shortest = 1000000
     for idx_step in range(1, 1000000):
@@ -915,6 +909,80 @@ def day18_part1(fn: str):
         if done:
             break
     return steps_shortest
+
+
+def day18_add_coord(coords, grid, segments, coord_segment, grid_size, idx_new_coord):
+    add_new_segment = True
+    row, col = coords[idx_new_coord]
+    con_above = row == 1
+    con_below = row == grid_size
+    con_left = col == 1
+    con_right = col == grid_size
+    new_con = (con_above, con_right, con_below, con_left)
+    idx_segment = -1
+    found_segment_ids = set()
+    for idx_grid in range(9):
+        row_add = idx_grid // 3 - 1
+        col_add = idx_grid % 3 - 1
+        row_eval = row + row_add
+        col_eval = col + col_add
+        idx_existing_coord = grid[row_eval][col_eval]
+        if idx_existing_coord > -1:
+            idx_segment = coord_segment[idx_existing_coord]
+            found_segment_ids.add(idx_segment)
+    if len(found_segment_ids) > 0:
+        idx_segment = min(found_segment_ids)
+        for idx_merge_segment in found_segment_ids:
+            combo = tuple(
+                x or y
+                for x, y in zip(segments[idx_segment], segments[idx_merge_segment])
+            )
+            segments[idx_segment] = combo
+        coord_segment[:] = [
+            idx_segment if x in found_segment_ids else x for x in coord_segment
+        ]
+    if idx_segment > -1:
+        coord_segment.append(idx_segment)
+        if sum(new_con) > 0:
+            combo = tuple(x or y for x, y in zip(segments[idx_segment], new_con))
+            segments[idx_segment] = combo
+        add_new_segment = False
+    if add_new_segment:
+        segments.append(new_con)
+        coord_segment.append(len(segments) - 1)
+    grid[row][col] = idx_new_coord
+
+
+def day18_part2(fn: str):
+    lines = read_file_as_lines(fn)
+    coords = []
+    for line in lines:
+        parts = line.split(",")
+        coords.append((int(parts[1]) + 1, int(parts[0]) + 1))
+    segments = []
+    grid_size = 7
+    num_initial_coords = 12
+    if fn.find("real") > -1:
+        num_initial_coords = 1024
+        grid_size = 71
+    grid = [[-1] * (grid_size + 2) for _ in range(grid_size + 2)]
+    coord_segment = []
+    for idx_new_coord in range(num_initial_coords):
+        day18_add_coord(coords, grid, segments, coord_segment, grid_size, idx_new_coord)
+    failed_coord = (-1, -1)
+    for idx_new_coord in range(num_initial_coords, len(coords)):
+        day18_add_coord(coords, grid, segments, coord_segment, grid_size, idx_new_coord)
+        con = False
+        for con_above, con_right, con_below, con_left in segments:
+            con = con or (con_above and con_left)
+            con = con or (con_above and con_below)
+            con = con or (con_below and con_right)
+            con = con or (con_left and con_right)
+        if con:
+            row_adj, col_adj = coords[idx_new_coord]
+            failed_coord = (col_adj - 1, row_adj - 1)
+            break
+    return failed_coord
 
 
 def aoc_2024(run_real=True, single_day=None):
