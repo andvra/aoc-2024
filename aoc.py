@@ -1493,10 +1493,46 @@ def day15_part2(fn: str):
 
 
 def day16_pos_to_hash(row, col, new_row_move, new_col_move):
-    return row * 1000000 + col * 1000 + new_row_move * 100 + new_col_move
+    idx_rotation = 0
+    if new_row_move != 0:
+        idx_rotation = (new_row_move + 1) // 2
+    if new_col_move != 0:
+        idx_rotation = ((new_col_move + 1) // 2) + 2
+    return 10000 * row + 10 * col + idx_rotation
 
 
-def day16_part1(fn: str):
+def day16_unique_squares(head_parents, heads, idx_first):
+    squares = set()
+    idx_search = [idx_first]
+    idx_start = 0
+    idx_end_excl = len(idx_search)
+    done = False
+    while not done:
+        num_new = 0
+        for idx in range(idx_start, idx_end_excl):
+            idx_head = idx_search[idx]
+            if idx_head == 1:
+                done = True
+                break
+            row, col, _, _, _ = heads[idx_head]
+            for idx_parent in head_parents[idx_head]:
+                row_parent, col_parent, row_move, col_move, _ = heads[idx_parent]
+                for iter in range(abs(row_parent - row) + abs(col_parent - col)):
+                    new_row = row_parent + iter * row_move
+                    new_col = col_parent + iter * col_move
+                    new_hash = new_row * 1000 + new_col
+                    squares.add(new_hash)
+                num_new += 1
+                idx_search.append(idx_parent)
+        if num_new == 0:
+            done = True
+        else:
+            idx_start = idx_end_excl
+            idx_end_excl = idx_start + num_new
+    return squares
+
+
+def day16_move(fn: str):
     board = read_file_as_lines(fn)
     num_rows = len(board)
     num_cols = len(board[0])
@@ -1507,27 +1543,30 @@ def day16_part1(fn: str):
     pos_end = (pos_e // num_rows, pos_e % num_cols)
     max_num_heads = 10000
     heads = [()] * max_num_heads
+    head_hash = [0] * max_num_heads
     heads[0] = pos_start + (0, 1, 0)
+    head_hash[0] = day16_pos_to_hash(pos_start[0], pos_start[1], 0, 1)
     num_heads = 1
     if board[pos_start[0] - 1][pos_start[1]] == ".":
         heads[1] = pos_start + (-1, 0, 1000)
+        head_hash[1] = day16_pos_to_hash(pos_start[0], pos_start[1], -1, 0)
         num_heads += 1
     used = [0] * max_num_heads
+    best_head = {}
+    head_parents = {}
     done = False
-    possible_scores = []
-    old_moves = {}
-    board_write = []
-    for line in board:
-        board_write.append(list(line))
+    best_score = 100000000
+    best_score_heads = []
+    old_scores = {}
     while not done:
         idx_best = -1
-        score_best = 1000000000
+        cur_best_score = 1000000000
         for idx_used in range(num_heads):
             if used[idx_used] == 0:
                 _, _, _, _, cur_score = heads[idx_used]
-                if cur_score < score_best:
+                if cur_score < cur_best_score:
                     idx_best = idx_used
-                    score_best = cur_score
+                    cur_best_score = cur_score
         if idx_best == -1:
             done = True
         else:
@@ -1543,35 +1582,69 @@ def day16_part1(fn: str):
                 if board[row][col] == "#":
                     break
                 if board[row][col] == "E":
-                    possible_scores.append(score)
-                    break
-                board_write[row][col] = "X"
-                if board[row + left_row_move][col + left_col_move] == ".":
-                    hash = day16_pos_to_hash(row, col, left_row_move, left_col_move)
-                    if (hash not in old_moves) or old_moves[hash] > score:
-                        new_score = score + 1000
-                        new_head = (row, col, left_row_move, left_col_move, new_score)
+                    if score <= best_score:
+                        hash_new = day16_pos_to_hash(row, col, row_move, col_move)
+                        new_head = (row, col, row_move, col_move, score)
                         heads[num_heads] = new_head
-                        used[num_heads] = 0
-                        old_moves[hash] = score
+                        used[num_heads] = 1
+                        best_head[hash_new] = num_heads
+                        head_parents[num_heads] = [idx_best]
+                        if score == best_score:
+                            best_score_heads.append(num_heads)
+                        elif score < best_score:
+                            best_score_heads.clear()
+                            best_score_heads.append(num_heads)
+                            best_score = score
                         num_heads += 1
+                    break
+                move_to_add = []
+                if board[row + left_row_move][col + left_col_move] == ".":
+                    move_to_add.append((left_row_move, left_col_move))
                 if board[row + right_row_move][col + right_col_move] == ".":
-                    hash = day16_pos_to_hash(row, col, right_row_move, right_col_move)
-                    if (hash not in old_moves) or old_moves[hash] > score:
-                        new_score = score + 1000
-                        new_head = (row, col, right_row_move, right_col_move, new_score)
+                    move_to_add.append((right_row_move, right_col_move))
+                for row_move_add, col_move_add in move_to_add:
+                    hash_new = day16_pos_to_hash(row, col, row_move_add, col_move_add)
+                    new_score = score + 1000
+                    if (hash_new in old_scores) and (old_scores[hash_new] == new_score):
+                        idx_head = best_head[hash_new]
+                        head_parents[idx_head].append(idx_best)
+                    elif (hash_new not in old_scores) or old_scores[
+                        hash_new
+                    ] > new_score:
+                        new_head = (row, col, row_move_add, col_move_add, new_score)
                         heads[num_heads] = new_head
                         used[num_heads] = 0
-                        old_moves[hash] = score
+                        best_head[hash_new] = num_heads
+                        head_parents[num_heads] = [idx_best]
+                        old_scores[hash_new] = new_score
                         num_heads += 1
             used[idx_best] = 1
-    return min(possible_scores)
+    return best_score, best_score_heads, head_parents, heads, board
+
+
+def day16_part1(fn: str):
+    best_score, _, _, _, _ = day16_move(fn)
+    print("We want 7036 / 91464")
+    return best_score
 
 
 def day16_part2(fn: str):
-    if fn.find("real") > -1:
-        return -1
-    return 0
+    # if fn.find("real") > -1:
+    #     return -1
+    _, best_score_heads, head_parents, heads, board = day16_move(fn)
+    all_squares = set()
+    for idx_head in best_score_heads:
+        all_squares.update(day16_unique_squares(head_parents, heads, idx_head))
+    board_write = []
+    for line in board:
+        board_write.append(list(line))
+    for square in all_squares:
+        row = square // 1000
+        col = square % 1000
+        board_write[row][col] = "O"
+    # for line in board_write:
+    #     print("".join(line))
+    return len(all_squares) + 1
 
 
 def day17_read_input(fn):
