@@ -384,3 +384,13 @@ def day18_part2(fn: str):
             failed_coord = (col_adj - 1, row_adj - 1)
             break
     return failed_coord
+
+
+def day19_part1(fn: str):
+    if fn.find("real") > -1:
+        return -1
+    lines = read_file_as_lines(fn)
+    stock = lines[0].split(", ")
+    desired = lines[2:]
+
+    return 0
