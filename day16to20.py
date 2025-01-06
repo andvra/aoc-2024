@@ -391,14 +391,17 @@ def day19_part1(fn: str):
     #     return -1
     lines = read_file_as_lines(fn)
     patterns = lines[0].split(", ")
+    max_len_pattern = len(max(patterns, key=len))
     desired = lines[2:]
-    max_len = len(max(patterns, key=len))
+    num_desired = len(desired)
+    max_len = len(max(desired, key=len))
     per_len = [[] for _ in range(max_len)]
     for pattern in patterns:
         per_len[len(pattern) - 1].append(pattern)
-    print(per_len)
+    for des in desired:
+        per_len[len(des) - 1].append(des)
     for level in range(1, max_len):
-        sub_patterns = [x for y in per_len[:level] for x in y]
+        sub_patterns = [x for y in per_len[: min(level, max_len_pattern)] for x in y]
         updated_level = []
         for cur_pattern in per_len[level]:
             do_remove = False
@@ -407,8 +410,6 @@ def day19_part1(fn: str):
                 for sub in sub_patterns:
                     if cur_pattern[idx_pos : idx_pos + len(sub)] == sub:
                         start_at[idx_pos].append(len(sub))
-                if len(start_at[idx_pos]) != len(set(start_at[idx_pos])):
-                    print("Turn into set instead, should not have duplicates")
             heads = [0]
             idx_start = 0
             idx_end_excl = len(heads)
@@ -431,5 +432,5 @@ def day19_part1(fn: str):
             if not do_remove:
                 updated_level.append(cur_pattern)
         per_len[level] = updated_level
-    print(per_len)
-    return 0
+    num_impossible = sum([len(l) for l in per_len[max_len_pattern:]])
+    return num_desired - num_impossible  # 263 too low
