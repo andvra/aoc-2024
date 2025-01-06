@@ -387,10 +387,49 @@ def day18_part2(fn: str):
 
 
 def day19_part1(fn: str):
-    if fn.find("real") > -1:
-        return -1
+    # if fn.find("real") > -1:
+    #     return -1
     lines = read_file_as_lines(fn)
-    stock = lines[0].split(", ")
+    patterns = lines[0].split(", ")
     desired = lines[2:]
-
+    max_len = len(max(patterns, key=len))
+    per_len = [[] for _ in range(max_len)]
+    for pattern in patterns:
+        per_len[len(pattern) - 1].append(pattern)
+    print(per_len)
+    for level in range(1, max_len):
+        sub_patterns = [x for y in per_len[:level] for x in y]
+        updated_level = []
+        for cur_pattern in per_len[level]:
+            do_remove = False
+            start_at = [[] for _ in range(level + 1)]
+            for idx_pos in range(level + 1):
+                for sub in sub_patterns:
+                    if cur_pattern[idx_pos : idx_pos + len(sub)] == sub:
+                        start_at[idx_pos].append(len(sub))
+                if len(start_at[idx_pos]) != len(set(start_at[idx_pos])):
+                    print("Turn into set instead, should not have duplicates")
+            heads = [0]
+            idx_start = 0
+            idx_end_excl = len(heads)
+            done = False
+            while not done:
+                for idx in range(idx_start, idx_end_excl):
+                    cur_pos = heads[idx]
+                    num_added = 0
+                    for at_pos in start_at[cur_pos]:
+                        if cur_pos + at_pos == level + 1:
+                            do_remove = True
+                            done = True
+                        heads.append(cur_pos + at_pos)
+                        num_added += 1
+                if num_added == 0:
+                    done = True
+                else:
+                    idx_start = idx_end_excl
+                    idx_end_excl = idx_start + num_added
+            if not do_remove:
+                updated_level.append(cur_pattern)
+        per_len[level] = updated_level
+    print(per_len)
     return 0
