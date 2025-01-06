@@ -1,3 +1,4 @@
+from functools import cache
 from shared import *
 
 
@@ -386,25 +387,38 @@ def day18_part2(fn: str):
     return failed_coord
 
 
-def day19_recurse(towels, desired, pos):
-    if pos == len(desired):
-        return True
-    found_ok = False
-    for towel in towels:
-        found_ok = found_ok or (
-            (desired[pos : pos + len(towel)] == towel)
-            and day19_recurse(towels, desired, pos + len(towel))
-        )
-    return found_ok
-
-
 def day19_part1(fn: str):
     lines = read_file_as_lines(fn)
-    towels = lines[0].split(", ")
-    desired = lines[2:]
-    num_ok = 0
-    for d in desired:
-        possible = day19_recurse(towels, d, 0)
-        if possible:
-            num_ok += 1
-    return num_ok
+    towels = set(lines[0].split(", "))
+    designs = lines[2:]
+
+    @cache
+    def check_possible(design: str):
+        if len(design) == 0:
+            return True
+        found_ok = False
+        for towel in towels:
+            found_ok = found_ok or (
+                design.startswith(towel) and check_possible(design[len(towel) :])
+            )
+        return found_ok
+
+    return sum(map(check_possible, designs))
+
+
+def day19_part2(fn: str):
+    lines = read_file_as_lines(fn)
+    towels = set(lines[0].split(", "))
+    designs = lines[2:]
+
+    @cache
+    def all_combos(design: str):
+        if len(design) == 0:
+            return 1
+        num_combos = 0
+        for towel in towels:
+            if design.startswith(towel):
+                num_combos += all_combos(design[len(towel) :])
+        return num_combos
+
+    return sum(map(all_combos, designs))
