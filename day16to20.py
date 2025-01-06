@@ -428,4 +428,33 @@ def day20_part1(fn: str):
     if fn.find("real") > -1:
         return -1
     lines = read_file_as_lines(fn)
+    board = []
+    for line in lines:
+        board.append(list(line))
+    num_rows = len(board)
+    num_cols = len(board[0])
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if board[row][col] == "S":
+                pos_start = (row, col)
+            if board[row][col] == "E":
+                pos_end = (row, col)
+    print(pos_start, pos_end)
+    board[pos_start[0]][pos_start[1]] = "."
+    board[pos_end[0]][pos_end[1]] = "."
+    # TODO: Find thin walls
+
+    board[pos_start[0]][pos_start[1]] = 0
+    cur_pos = pos_start
+    while cur_pos != pos_end:
+        row, col = cur_pos
+        cur_val = board[row][col]
+        for row_move, col_move in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            row_eval = row + row_move
+            col_eval = col + col_move
+            if board[row_eval][col_eval] == ".":
+                board[row_eval][col_eval] = cur_val + 1
+                cur_pos = (row_eval, col_eval)
+                break
+
     return 0
