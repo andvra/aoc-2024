@@ -386,51 +386,25 @@ def day18_part2(fn: str):
     return failed_coord
 
 
+def day19_recurse(towels, desired, pos):
+    if pos == len(desired):
+        return True
+    found_ok = False
+    for towel in towels:
+        found_ok = found_ok or (
+            (desired[pos : pos + len(towel)] == towel)
+            and day19_recurse(towels, desired, pos + len(towel))
+        )
+    return found_ok
+
+
 def day19_part1(fn: str):
-    # if fn.find("real") > -1:
-    #     return -1
     lines = read_file_as_lines(fn)
-    patterns = lines[0].split(", ")
-    max_len_pattern = len(max(patterns, key=len))
+    towels = lines[0].split(", ")
     desired = lines[2:]
-    num_desired = len(desired)
-    max_len = len(max(desired, key=len))
-    per_len = [[] for _ in range(max_len)]
-    for pattern in patterns:
-        per_len[len(pattern) - 1].append(pattern)
-    for des in desired:
-        per_len[len(des) - 1].append(des)
-    for level in range(1, max_len):
-        sub_patterns = [x for y in per_len[: min(level, max_len_pattern)] for x in y]
-        updated_level = []
-        for cur_pattern in per_len[level]:
-            do_remove = False
-            start_at = [[] for _ in range(level + 1)]
-            for idx_pos in range(level + 1):
-                for sub in sub_patterns:
-                    if cur_pattern[idx_pos : idx_pos + len(sub)] == sub:
-                        start_at[idx_pos].append(len(sub))
-            heads = [0]
-            idx_start = 0
-            idx_end_excl = len(heads)
-            done = False
-            while not done:
-                for idx in range(idx_start, idx_end_excl):
-                    cur_pos = heads[idx]
-                    num_added = 0
-                    for at_pos in start_at[cur_pos]:
-                        if cur_pos + at_pos == level + 1:
-                            do_remove = True
-                            done = True
-                        heads.append(cur_pos + at_pos)
-                        num_added += 1
-                if num_added == 0:
-                    done = True
-                else:
-                    idx_start = idx_end_excl
-                    idx_end_excl = idx_start + num_added
-            if not do_remove:
-                updated_level.append(cur_pattern)
-        per_len[level] = updated_level
-    num_impossible = sum([len(l) for l in per_len[max_len_pattern:]])
-    return num_desired - num_impossible  # 263 too low
+    num_ok = 0
+    for d in desired:
+        possible = day19_recurse(towels, d, 0)
+        if possible:
+            num_ok += 1
+    return num_ok
