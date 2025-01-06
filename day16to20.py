@@ -425,8 +425,8 @@ def day19_part2(fn: str):
 
 
 def day20_part1(fn: str):
-    if fn.find("real") > -1:
-        return -1
+    # if fn.find("real") > -1:
+    #     return -1
     lines = read_file_as_lines(fn)
     board = []
     for line in lines:
@@ -439,11 +439,18 @@ def day20_part1(fn: str):
                 pos_start = (row, col)
             if board[row][col] == "E":
                 pos_end = (row, col)
-    print(pos_start, pos_end)
     board[pos_start[0]][pos_start[1]] = "."
     board[pos_end[0]][pos_end[1]] = "."
-    # TODO: Find thin walls
-
+    row_shortcuts = []
+    col_shortcuts = []
+    for row in range(1, num_rows - 1):
+        for col in range(1, num_cols - 1):
+            row_slice = [board[idx][col] for idx in range(row - 1, row + 2)]
+            if row_slice == [".", "#", "."]:
+                row_shortcuts.append((row, col))
+            col_slice = [board[row][idx] for idx in range(col - 1, col + 2)]
+            if col_slice == [".", "#", "."]:
+                col_shortcuts.append((row, col))
     board[pos_start[0]][pos_start[1]] = 0
     cur_pos = pos_start
     while cur_pos != pos_end:
@@ -456,5 +463,11 @@ def day20_part1(fn: str):
                 board[row_eval][col_eval] = cur_val + 1
                 cur_pos = (row_eval, col_eval)
                 break
-
-    return 0
+    shortcuts = {}
+    for row, col in row_shortcuts:
+        reward = abs(board[row + 1][col] - board[row - 1][col]) - 2
+        shortcuts[reward] = shortcuts.get(reward, 0) + 1
+    for row, col in col_shortcuts:
+        reward = abs(board[row][col + 1] - board[row][col - 1]) - 2
+        shortcuts[reward] = shortcuts.get(reward, 0) + 1
+    return sum([v for k, v in shortcuts.items() if k >= 100])
