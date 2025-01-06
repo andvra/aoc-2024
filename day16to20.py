@@ -422,3 +422,10 @@ def day19_part2(fn: str):
         return num_combos
 
     return sum(map(all_combos, designs))
+
+
+def day20_part1(fn: str):
+    if fn.find("real") > -1:
+        return -1
+    lines = read_file_as_lines(fn)
+    return 0
