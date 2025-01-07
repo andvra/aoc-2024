@@ -424,9 +424,7 @@ def day19_part2(fn: str):
     return sum(map(all_combos, designs))
 
 
-def day20_part1(fn: str):
-    # if fn.find("real") > -1:
-    #     return -1
+def day20_read_board(fn: str):
     lines = read_file_as_lines(fn)
     board = []
     for line in lines:
@@ -441,16 +439,10 @@ def day20_part1(fn: str):
                 pos_end = (row, col)
     board[pos_start[0]][pos_start[1]] = "."
     board[pos_end[0]][pos_end[1]] = "."
-    row_shortcuts = []
-    col_shortcuts = []
-    for row in range(1, num_rows - 1):
-        for col in range(1, num_cols - 1):
-            row_slice = [board[idx][col] for idx in range(row - 1, row + 2)]
-            if row_slice == [".", "#", "."]:
-                row_shortcuts.append((row, col))
-            col_slice = [board[row][idx] for idx in range(col - 1, col + 2)]
-            if col_slice == [".", "#", "."]:
-                col_shortcuts.append((row, col))
+    return board, num_rows, num_cols, pos_start, pos_end
+
+
+def day20_solve_board(board, pos_start, pos_end):
     board[pos_start[0]][pos_start[1]] = 0
     cur_pos = pos_start
     while cur_pos != pos_end:
@@ -463,6 +455,21 @@ def day20_part1(fn: str):
                 board[row_eval][col_eval] = cur_val + 1
                 cur_pos = (row_eval, col_eval)
                 break
+
+
+def day20_part1(fn: str):
+    board, num_rows, num_cols, pos_start, pos_end = day20_read_board(fn)
+    row_shortcuts = []
+    col_shortcuts = []
+    for row in range(1, num_rows - 1):
+        for col in range(1, num_cols - 1):
+            row_slice = [board[idx][col] for idx in range(row - 1, row + 2)]
+            if row_slice == [".", "#", "."]:
+                row_shortcuts.append((row, col))
+            col_slice = [board[row][idx] for idx in range(col - 1, col + 2)]
+            if col_slice == [".", "#", "."]:
+                col_shortcuts.append((row, col))
+    day20_solve_board(board, pos_start, pos_end)
     shortcuts = {}
     for row, col in row_shortcuts:
         reward = abs(board[row + 1][col] - board[row - 1][col]) - 2
@@ -471,3 +478,64 @@ def day20_part1(fn: str):
         reward = abs(board[row][col + 1] - board[row][col - 1]) - 2
         shortcuts[reward] = shortcuts.get(reward, 0) + 1
     return sum([v for k, v in shortcuts.items() if k >= 100])
+
+
+def day20_part2(fn: str):
+    board, num_rows, num_cols, pos_start, pos_end = day20_read_board(fn)
+    day20_solve_board(board, pos_start, pos_end)
+    max_steps = 20
+    min_cheat = 50
+
+    if fn.find("real") > -1:
+        min_cheat = 100
+
+    def find_cheats(start_score, pos):
+        cheats = set()
+        heads = [pos]
+        idx_start = 0
+        idx_end_excl = len(heads)
+        num_steps = 0
+        visited = set()
+        visited.update(heads)
+        while num_steps <= max_steps:
+            num_new = 0
+            for idx in range(idx_start, idx_end_excl):
+                row, col = heads[idx]
+                if isinstance(board[row][col], int):
+                    end_score = board[row][col]
+                    new_cheat = end_score - start_score - num_steps
+                    if new_cheat >= min_cheat:
+                        cheats.add((start_score, end_score, new_cheat, num_steps))
+                for row_add, col_add in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    row_eval = row + row_add
+                    col_eval = col + col_add
+                    if row_eval < 0 or row_eval >= num_rows:
+                        continue
+                    if col_eval < 0 or col_eval >= num_cols:
+                        continue
+                    new_pos = (row_eval, col_eval)
+                    if new_pos in visited:
+                        continue
+                    heads.append(new_pos)
+                    visited.add(new_pos)
+                    num_new += 1
+
+            num_steps += 1
+            idx_start = idx_end_excl
+            idx_end_excl = idx_start + num_new
+        return cheats
+
+    all_cheats = set()
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if isinstance(board[row][col], int):
+                start_score = board[row][col]
+                pos = (row, col)
+                all_cheats.update(find_cheats(start_score, pos))
+    scores = {}
+    for _, _, score, _ in all_cheats:
+        scores[score] = scores.get(score, 0) + 1
+    scores = dict(sorted(scores.items(), key=lambda item: item[0]))
+    res = sum(v for _, v in scores.items())
+
+    return res
