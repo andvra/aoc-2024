@@ -4,7 +4,7 @@ from shared import *
 def day21_part1(fn: str):
     if fn.find("real") > -1:
         return -1
-
+    # Key A is number 10 (= idx 11) on numeric
     pos_numeric = [(3, 1)]
     for n in range(1, 10):
         row = 2 - (n - 1) // 3
@@ -35,4 +35,39 @@ def day21_part1(fn: str):
             numeric_shortest[idx_end][idx_start] = [(-r, -c) for r, c in steps[::-1]]
     for k, v in numeric_shortest.items():
         print(k, v)
-    # TODO: Now we now how to move on the numeric keypad. Do the same for directional keypad
+    # Key is where the button will move us, value is position of this key
+    # Key A is (0, 0) on directional
+    dir_placements = {}
+    dir_placements[(-1, 0)] = (0, 1)
+    dir_placements[(0, 0)] = (0, 2)
+    dir_placements[(0, -1)] = (1, 0)
+    dir_placements[(1, 0)] = (1, 1)
+    dir_placements[(0, 1)] = (1, 2)
+    dirs = [(0, 0), (1, 0), (-1, 0), (0, -1), (0, 1)]
+    directional_shortest = {}
+    for dir in dirs:
+        directional_shortest[dir] = {}
+    for idx_start in range(len(dir_placements)):
+        dir_start = dirs[idx_start]
+        row_start, col_start = dir_placements[dir_start]
+        for idx_end in range(idx_start + 1, len(dir_placements)):
+            dir_end = dirs[idx_end]
+            row_end, col_end = dir_placements[dir_end]
+            row_diff = row_end - row_start
+            col_diff = col_end - col_start
+            steps_row = [
+                (row_diff // abs(row_diff), 0) for _ in range(1, abs(row_diff) + 1)
+            ]
+            steps_col = [
+                (0, col_diff // abs(col_diff)) for _ in range(1, abs(col_diff) + 1)
+            ]
+            if row_diff > 0:
+                steps = steps_row + steps_col
+            else:
+                steps = steps_col + steps_row
+            directional_shortest[dir_start][dir_end] = steps
+            directional_shortest[dir_end][dir_start] = [
+                (-r, -c) for r, c in steps[::-1]
+            ]
+    for k, v in directional_shortest.items():
+        print(k, v)
