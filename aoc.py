@@ -4,6 +4,7 @@ from day1to5 import *
 from day6to10 import *
 from day11to15 import *
 from day16to20 import *
+from day21to25 import *
 
 
 def aoc_2024(run_real=True, single_day=None):
