@@ -74,8 +74,6 @@ def day21_part1(fn: str):
 
 
 def day22_part1(fn: str):
-    # if fn.find("real") > -1:
-    #     return -1
     numbers = list(map(int, read_file_as_lines(fn)))
 
     def next(x: int):
