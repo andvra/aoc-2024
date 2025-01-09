@@ -76,16 +76,46 @@ def day21_part1(fn: str):
 def day22_part1(fn: str):
     numbers = list(map(int, read_file_as_lines(fn)))
 
-    def next(x: int):
-        x = (x * 64 ^ x) & ((1 << 24) - 1)
-        x = (x // 32 ^ x) & ((1 << 24) - 1)
-        x = (x * 2048 ^ x) & ((1 << 24) - 1)
+    def next(x: int, num_iter: int):
+        prune_val: int = (1 << 24) - 1
+        for _ in range(num_iter):
+            x = (x * 64 ^ x) & prune_val
+            x = (x // 32 ^ x) & prune_val
+            x = (x * 2048 ^ x) & prune_val
         return x
 
-    res = 0
-    for x in numbers:
-        y = x
-        for _ in range(2000):
-            y = next(y)
-        res += y
+    res = sum([next(x, 2000) for x in numbers])
     return res
+
+
+def day22_part2(fn: str):
+    numbers = list(map(int, read_file_as_lines(fn)))
+
+    if fn.find("test") > -1:
+        numbers = [1, 2, 3, 2024]
+
+    def next(x: int, num_iter: int, valdiff: List[tuple]):
+        prune_val: int = (1 << 24) - 1
+        last_last = x % 10
+        for _ in range(num_iter):
+            x = (x * 64 ^ x) & prune_val
+            x = (x // 32 ^ x) & prune_val
+            x = (x * 2048 ^ x) & prune_val
+            cur_last = x % 10
+            valdiff.append((cur_last, cur_last - last_last))
+            last_last = cur_last
+        return x
+
+    scores_total = {}
+    for _, x in enumerate(numbers):
+        valdiff = []
+        _ = next(x, 2000, valdiff)
+        scores = {}
+        for idx_start in range(len(valdiff) - 3):
+            combo = tuple([v for _, v in valdiff[idx_start : idx_start + 4]])
+            if combo not in scores:
+                score = valdiff[idx_start + 3][0]
+                scores[combo] = score
+                scores_total[combo] = scores_total.get(combo, 0) + score
+    max_key = max(scores_total, key=scores_total.get)
+    return scores_total[max_key]
