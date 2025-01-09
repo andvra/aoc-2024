@@ -138,6 +138,8 @@ def day23_part1(fn: str):
         if len(cur_lan_ids) == 2:
             lan_id_min = min(cur_lan_ids)
             lan_id_max = max(cur_lan_ids)
+            for name in lans[lan_id_max]:
+                names[name] = lan_id_min
             lans[lan_id_min].update(lans[lan_id_max])
             lans[lan_id_max].clear()
             new_id = lan_id_min
