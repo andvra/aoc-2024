@@ -119,3 +119,37 @@ def day22_part2(fn: str):
                 scores_total[combo] = scores_total.get(combo, 0) + score
     max_key = max(scores_total, key=scores_total.get)
     return scores_total[max_key]
+
+
+def day23_part1(fn: str):
+    if fn.find("real") > -1:
+        return -1
+    lines = read_file_as_lines(fn)
+    pairs = list(map(lambda x: tuple(x.split("-")), lines))
+    names = {}
+    lans = []
+    for pc1, pc2 in pairs:
+        new_id = -1
+        cur_lan_ids = set()
+        if pc1 in names:
+            cur_lan_ids.add(names[pc1])
+        if pc2 in names:
+            cur_lan_ids.add(names[pc2])
+        if len(cur_lan_ids) == 2:
+            lan_id_min = min(cur_lan_ids)
+            lan_id_max = max(cur_lan_ids)
+            lans[lan_id_min] += lans[lan_id_max]
+            lans[lan_id_max].clear()
+            new_id = lan_id_min
+        if len(cur_lan_ids) == 1:
+            new_id = cur_lan_ids.pop()
+        if new_id == -1:
+            lans.append([])
+            new_id = len(lans) - 1
+        names[pc1] = new_id
+        names[pc2] = new_id
+        lans[new_id].append(pc1)
+        lans[new_id].append(pc2)
+    print(names)
+    print(lans)
+    return 0
