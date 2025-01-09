@@ -71,3 +71,23 @@ def day21_part1(fn: str):
             ]
     for k, v in directional_shortest.items():
         print(k, v)
+
+
+def day22_part1(fn: str):
+    # if fn.find("real") > -1:
+    #     return -1
+    numbers = list(map(int, read_file_as_lines(fn)))
+
+    def next(x: int):
+        x = (x * 64 ^ x) & ((1 << 24) - 1)
+        x = (x // 32 ^ x) & ((1 << 24) - 1)
+        x = (x * 2048 ^ x) & ((1 << 24) - 1)
+        return x
+
+    res = 0
+    for x in numbers:
+        y = x
+        for _ in range(2000):
+            y = next(y)
+        res += y
+    return res
