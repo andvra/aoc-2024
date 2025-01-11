@@ -149,3 +149,42 @@ def day23_part1(fn: str):
                         combos.add((v, val_low, val_high))
     ret = len(combos)
     return ret
+
+
+def day23_part2(fn: str):
+    def name_to_int(name: str):
+        return ord(name[0]) * 1000 + ord(name[1])
+
+    lines = read_file_as_lines(fn)
+    pairs = list(map(lambda x: tuple(x.split("-")), lines))
+    pairs = [(name_to_int(x), name_to_int(y)) for x, y in pairs]
+    pairs = [(min(x, y), max(x, y)) for x, y in pairs]
+    pairs_sorted = sorted(pairs, key=lambda x: (x[0], x[1]))
+    direct_con = {}
+    for x, y in pairs_sorted:
+        val_min = min(x, y)
+        val_max = max(x, y)
+        direct_con[val_min] = direct_con.get(val_min, []) + [val_max]
+
+    groups = {}
+    for x, y in pairs_sorted:
+        val_min = min(x, y)
+        val_max = max(x, y)
+        do_add = True
+        if val_min not in groups:
+            do_add = True
+        else:
+            for val_cur in groups[val_min]:
+                cur_min = min(val_cur, val_max)
+                cur_max = max(val_cur, val_max)
+                if cur_min not in direct_con:
+                    continue
+                if cur_max not in direct_con[cur_min]:
+                    do_add = False
+                    break
+        if do_add:
+            groups[val_min] = groups.get(val_min, []) + [val_max]
+    max_group = max(groups.items(), key=lambda x: len(x[1]))
+    vals = [max_group[0]] + max_group[1]
+    names = [chr(x // 1000) + chr(x % 1000) for x in vals]
+    return ",".join(names)
