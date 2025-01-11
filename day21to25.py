@@ -190,20 +190,24 @@ def day23_part2(fn: str):
     return ",".join(names)
 
 
-def day24_part1(fn: str):
+def day24_get_input(fn: str):
     lines = read_file_as_lines(fn)
     idx_empty = lines.index("")
     lines_initial = lines[:idx_empty]
     lines_wires = lines[idx_empty + 1 :]
     initial = list(map(lambda line: line.split(": "), lines_initial))
     initial = [(x, int(y)) for x, y in initial]
-    vals = {}
-    zs = []
-    for name, val in initial:
-        vals[name] = val
     wires = list(map(lambda line: line.split(" -> "), lines_wires))
     wires = [tuple([y] + x.split(" ")) for x, y in wires]
-    [zs.append(var_out) for var_out, _, _, _ in wires if var_out.startswith("z")]
+    return initial, wires
+
+
+def day24_part1(fn: str):
+    initial, wires = day24_get_input(fn)
+    vals = {}
+    for name, val in initial:
+        vals[name] = val
+    zs = [var_out for var_out, _, _, _ in wires if var_out.startswith("z")]
     zs.sort()
     done = False
     while not done:
@@ -226,9 +230,28 @@ def day24_part1(fn: str):
                 cnt += 1
         if cnt == len(zs):
             done = True
-    bits = []
-    [bits.append(vals[x]) for x in zs]
+    bits = [vals[x] for x in zs]
     res = 0
     for idx, bit in enumerate(bits):
         res += bit << idx
     return res
+
+
+def day24_part2(fn: str):
+    if fn.find("real") > -1:
+        return -1
+    initial, wires = day24_get_input(fn)
+    zs = [var_out for var_out, _, _, _ in wires if var_out.startswith("z")]
+    num_z_vals = len(zs)
+    x_bits = [v for k, v in initial[::-1] if k.startswith("x")]
+    y_bits = [v for k, v in initial[::-1] if k.startswith("y")]
+    x_bin_string = "".join([str(v) for v in x_bits])
+    y_bin_string = "".join([str(v) for v in y_bits])
+    x_val = int(x_bin_string, 2)
+    y_val = int(y_bin_string, 2)
+    z_val = x_val + y_val
+    z_bin_string = f"{z_val:0{num_z_vals}b}"
+    print(x_bin_string, x_val)
+    print(y_bin_string, y_val)
+    print(z_bin_string, z_val)
+    return 0
