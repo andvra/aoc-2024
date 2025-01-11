@@ -122,36 +122,30 @@ def day22_part2(fn: str):
 
 
 def day23_part1(fn: str):
-    if fn.find("real") > -1:
-        return -1
+    def name_to_int(name: str):
+        return ord(name[0]) * 1000 + ord(name[1])
+
     lines = read_file_as_lines(fn)
     pairs = list(map(lambda x: tuple(x.split("-")), lines))
+    pairs = [(name_to_int(x), name_to_int(y)) for x, y in pairs]
     names = {}
-    lans = []
-    for pc1, pc2 in pairs:
-        new_id = -1
-        cur_lan_ids = set()
-        if pc1 in names:
-            cur_lan_ids.add(names[pc1])
-        if pc2 in names:
-            cur_lan_ids.add(names[pc2])
-        if len(cur_lan_ids) == 2:
-            lan_id_min = min(cur_lan_ids)
-            lan_id_max = max(cur_lan_ids)
-            for name in lans[lan_id_max]:
-                names[name] = lan_id_min
-            lans[lan_id_min].update(lans[lan_id_max])
-            lans[lan_id_max].clear()
-            new_id = lan_id_min
-        if len(cur_lan_ids) == 1:
-            new_id = cur_lan_ids.pop()
-        if new_id == -1:
-            lans.append(set())
-            new_id = len(lans) - 1
-        names[pc1] = new_id
-        names[pc2] = new_id
-        lans[new_id].add(pc1)
-        lans[new_id].add(pc2)
-    print(names)
-    print(lans)
-    return 0
+    for v1, v2 in pairs:
+        val_min = min(v1, v2)
+        val_max = max(v1, v2)
+        names[val_min] = names.get(val_min, []) + [val_max]
+    combos = set()
+    for v, k in names.items():
+        k = sorted(k)
+        val_first_char = [0] * 3
+        val_first_char[0] = v // 1000
+        for idx_low in range(len(k) - 1):
+            val_low = k[idx_low]
+            val_first_char[1] = val_low // 1000
+            for idx_high in range(idx_low + 1, len(k)):
+                val_high = k[idx_high]
+                val_first_char[2] = val_high // 1000
+                if val_low in names and val_high in names[val_low]:
+                    if ord("t") in val_first_char:
+                        combos.add((v, val_low, val_high))
+    ret = len(combos)
+    return ret
