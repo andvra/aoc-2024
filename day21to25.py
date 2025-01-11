@@ -188,3 +188,47 @@ def day23_part2(fn: str):
     vals = [max_group[0]] + max_group[1]
     names = [chr(x // 1000) + chr(x % 1000) for x in vals]
     return ",".join(names)
+
+
+def day24_part1(fn: str):
+    lines = read_file_as_lines(fn)
+    idx_empty = lines.index("")
+    lines_initial = lines[:idx_empty]
+    lines_wires = lines[idx_empty + 1 :]
+    initial = list(map(lambda line: line.split(": "), lines_initial))
+    initial = [(x, int(y)) for x, y in initial]
+    vals = {}
+    zs = []
+    for name, val in initial:
+        vals[name] = val
+    wires = list(map(lambda line: line.split(" -> "), lines_wires))
+    wires = [tuple([y] + x.split(" ")) for x, y in wires]
+    [zs.append(var_out) for var_out, _, _, _ in wires if var_out.startswith("z")]
+    zs.sort()
+    done = False
+    while not done:
+        for var_out, var_in_1, op, var_in_2 in wires:
+            if var_out not in vals:
+                if var_in_1 in vals and var_in_2 in vals:
+                    val1 = vals[var_in_1]
+                    val2 = vals[var_in_2]
+                    val_out = 0
+                    if op == "OR":
+                        val_out = val1 | val2
+                    if op == "XOR":
+                        val_out = val1 ^ val2
+                    if op == "AND":
+                        val_out = val1 & val2
+                    vals[var_out] = val_out
+        cnt = 0
+        for cur_var_z in zs:
+            if cur_var_z in vals:
+                cnt += 1
+        if cnt == len(zs):
+            done = True
+    bits = []
+    [bits.append(vals[x]) for x in zs]
+    res = 0
+    for idx, bit in enumerate(bits):
+        res += bit << idx
+    return res
