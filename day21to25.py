@@ -266,4 +266,12 @@ def day24_part2(fn: str):
     print(z_exp_bin_string, z_exp_val)
     print(z_act_bin_string, z_act_val)
     print(len(wires))
+    all_inputs = {}
+    for _, v1, _, v2 in wires:
+        all_inputs[v1] = all_inputs.get(v1, 0) + 1
+        all_inputs[v2] = all_inputs.get(v2, 0) + 1
+    max_inputs = [k for k, v in all_inputs.items() if v == 2]
+    min_inputs = [k for k, v in all_inputs.items() if v == 1]
+    print(max_inputs)
+    print(min_inputs)
     return 0
