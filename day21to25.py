@@ -310,3 +310,27 @@ def day24_part2(fn: str):
     print(max_inputs)
     print(min_inputs)
     return 0
+
+
+def day25_part1(fn: str):
+    if fn.find("real") > -1:
+        return -1
+    lines = read_file_as_lines(fn)
+    num_rows = 7
+    num_objects = (len(lines) + 1) // (num_rows + 1)
+    keys = []
+    locks = []
+    for idx_object in range(num_objects):
+        cur_lines = lines[
+            idx_object * (num_rows + 1) : (idx_object + 1) * (num_rows + 1) - 1
+        ]
+        cols = [[] for _ in range(5)]
+        for line in cur_lines:
+            for col, ch in enumerate(line):
+                cols[col].append(ch)
+        cnt = [col.count("#") - 1 for col in cols]
+        if cur_lines[0][0] == "#":
+            locks.append(cnt)
+        else:
+            keys.append(cnt)
+    return 0
