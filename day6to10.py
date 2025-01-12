@@ -336,8 +336,6 @@ def day7_part1(fn):
 
 
 def day7_part2(fn: str):
-    # if fn.find("real") > -1:
-    #     return -1
     lines = read_file_as_lines(fn)
     equations = [
         (
@@ -350,14 +348,17 @@ def day7_part2(fn: str):
     num_op = 3
     operators = day7_generate_operators(num_op, max_num_combos)
     score = 0
-    for val_out, vals_in in equations:
-        print(val_out, vals_in)
-        is_ok = False
-        num_in = len(vals_in)
+    ops_for_input_len = [[], []]
+    for num_in in range(2, max_num_combos + 2):
         ops = [
             x[max_num_combos - (num_in - 1) :]
             for x in operators[: num_op ** (num_in - 1)]
         ]
+        ops_for_input_len.append(ops)
+    for val_out, vals_in in equations:
+        is_ok = False
+        num_in = len(vals_in)
+        ops = ops_for_input_len[num_in]
         for cur_ops in ops:
             res = vals_in[0]
             for idx, op in enumerate(cur_ops):
@@ -366,11 +367,14 @@ def day7_part2(fn: str):
                 if op == 1:
                     res = res * vals_in[idx + 1]
                 if op == 2:
-                    res = int(str(res) + str(vals_in[idx + 1]))
+                    res = (
+                        res * (10 ** (int(math.log10(vals_in[idx + 1])) + 1))
+                        + vals_in[idx + 1]
+                    )
+                if res > val_out:
+                    break
             if res == val_out:
                 is_ok = True
-                break
-            if is_ok:
                 break
         if is_ok:
             score += val_out
