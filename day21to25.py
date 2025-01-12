@@ -313,8 +313,6 @@ def day24_part2(fn: str):
 
 
 def day25_part1(fn: str):
-    if fn.find("real") > -1:
-        return -1
     lines = read_file_as_lines(fn)
     num_rows = 7
     num_objects = (len(lines) + 1) // (num_rows + 1)
@@ -333,4 +331,11 @@ def day25_part1(fn: str):
             locks.append(cnt)
         else:
             keys.append(cnt)
-    return 0
+    num_fit = 0
+    for lock in locks:
+        for key in keys:
+            new_cols = [a + b for a, b in zip(lock, key)]
+            val_max = max(new_cols)
+            if val_max < 6:
+                num_fit += 1
+    return num_fit
