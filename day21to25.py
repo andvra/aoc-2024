@@ -4,71 +4,106 @@ from shared import *
 def day21_part1(fn: str):
     if fn.find("real") > -1:
         return -1
+    lines = read_file_as_lines(fn)
+    codes = []
+    for line in lines:
+        code = list(line)
+        code[-1] = "10"
+        code = list(map(lambda x: int(x), code))
+        codes.append(code)
     # Key A is number 10 (= idx 11) on numeric
-    pos_numeric = [(3, 1)]
+    pos_numeric = {}
+    pos_numeric[0] = (3, 1)
     for n in range(1, 10):
         row = 2 - (n - 1) // 3
         col = (n - 1) % 3
-        pos_numeric.append((row, col))
-    pos_numeric.append((3, 2))
+        pos_numeric[n] = (row, col)
+    pos_numeric[10] = (3, 2)
     numeric_shortest = {}
-    for idx in range(0, 12):
+    for idx in range(11):
         numeric_shortest[idx] = {}
-    for idx_start in range(0, 11):
-        row_start, col_start = pos_numeric[idx_start]
-        for idx_end in range(idx_start, 11):
-            row_end, col_end = pos_numeric[idx_end]
-            row_diff = row_end - row_start
-            col_diff = col_end - col_start
-            steps_row = [
-                (row_diff // abs(row_diff), 0) for _ in range(1, abs(row_diff) + 1)
-            ]
-            steps_col = [
-                (0, col_diff // abs(col_diff)) for _ in range(1, abs(col_diff) + 1)
-            ]
-            # Order of movement matters
-            if row_diff > 0:
-                steps = steps_col + steps_row
-            else:
-                steps = steps_row + steps_col
-            numeric_shortest[idx_start][idx_end] = steps
-            numeric_shortest[idx_end][idx_start] = [(-r, -c) for r, c in steps[::-1]]
-    for k, v in numeric_shortest.items():
-        print(k, v)
+
+    def find_paths(positions, indices, set_shortest):
+        all_pos = set()
+        for idx in indices:
+            all_pos.add(positions[idx])
+        for idx_end_offset, idx_start in enumerate(indices):
+            row_start, col_start = positions[idx_start]
+            for idx_end in indices[idx_end_offset + 1 :]:
+                row_end, col_end = positions[idx_end]
+                row_diff = row_end - row_start
+                col_diff = col_end - col_start
+                steps_row = [
+                    (row_diff // abs(row_diff), 0) for _ in range(1, abs(row_diff) + 1)
+                ]
+                steps_col = [
+                    (0, col_diff // abs(col_diff)) for _ in range(1, abs(col_diff) + 1)
+                ]
+                start_with_row = (row_start + row_diff, col_start) in all_pos
+                # Order of movement matters
+                if start_with_row:
+                    steps = steps_row + steps_col
+                else:
+                    steps = steps_col + steps_row
+                set_shortest[idx_start][idx_end] = steps
+                set_shortest[idx_end][idx_start] = [(-r, -c) for r, c in steps[::-1]]
+
+    find_paths(pos_numeric, range(0, 11), numeric_shortest)
     # Key is where the button will move us, value is position of this key
     # Key A is (0, 0) on directional
-    dir_placements = {}
-    dir_placements[(-1, 0)] = (0, 1)
-    dir_placements[(0, 0)] = (0, 2)
-    dir_placements[(0, -1)] = (1, 0)
-    dir_placements[(1, 0)] = (1, 1)
-    dir_placements[(0, 1)] = (1, 2)
+    pos_directional = {}
+    pos_directional[(-1, 0)] = (0, 1)
+    pos_directional[(0, 0)] = (0, 2)
+    pos_directional[(0, -1)] = (1, 0)
+    pos_directional[(1, 0)] = (1, 1)
+    pos_directional[(0, 1)] = (1, 2)
     dirs = [(0, 0), (1, 0), (-1, 0), (0, -1), (0, 1)]
     directional_shortest = {}
     for dir in dirs:
         directional_shortest[dir] = {}
-    for idx_start in range(len(dir_placements)):
-        dir_start = dirs[idx_start]
-        row_start, col_start = dir_placements[dir_start]
-        for idx_end in range(idx_start + 1, len(dir_placements)):
-            dir_end = dirs[idx_end]
-            row_end, col_end = dir_placements[dir_end]
-            row_diff = row_end - row_start
-            col_diff = col_end - col_start
-            steps_row = [
-                (row_diff // abs(row_diff), 0) for _ in range(1, abs(row_diff) + 1)
-            ]
-            steps_col = [
-                (0, col_diff // abs(col_diff)) for _ in range(1, abs(col_diff) + 1)
-            ]
-            if row_diff > 0:
-                steps = steps_row + steps_col
-            else:
-                steps = steps_col + steps_row
-            directional_shortest[dir_start][dir_end] = steps
-            directional_shortest[dir_end][dir_start] = [
-                (-r, -c) for r, c in steps[::-1]
-            ]
+
+    find_paths(pos_directional, dirs, directional_shortest)
+
+    def steps_to_string(steps):
+        ret = ""
+        step_char = {}
+        step_char[(0, 0)] = "A"
+        step_char[(1, 0)] = "v"
+        step_char[(-1, 0)] = "^"
+        step_char[(0, 1)] = ">"
+        step_char[(0, -1)] = "<"
+        for step in steps:
+            ret += step_char[step]
+        return ret
+
+    for code in codes:
+        cur_val_num = 10
+        cur_val_robot1 = (0, 0)
+        cur_val_robot2 = (0, 0)
+        all_steps = []
+        for next_val_num in code:
+            robot1_moves = []
+            robot1_moves += numeric_shortest[cur_val_num][next_val_num]
+            robot1_moves += [(0, 0)]
+            for next_val_robot1 in robot1_moves:
+                robot2_moves = []
+                if next_val_robot1 in directional_shortest[cur_val_robot1]:
+                    robot2_moves += directional_shortest[cur_val_robot1][
+                        next_val_robot1
+                    ]
+                robot2_moves += [(0, 0)]
+                for next_val_robot2 in robot2_moves:
+                    man_moves = []
+                    if next_val_robot2 in directional_shortest[cur_val_robot2]:
+                        man_moves += directional_shortest[cur_val_robot2][
+                            next_val_robot2
+                        ]
+                    man_moves += [(0, 0)]
+                    all_steps += man_moves
+                    cur_val_robot2 = next_val_robot2
+                cur_val_robot1 = next_val_robot1
+            cur_val_num = next_val_num
+        print("".join(map(str, code)), steps_to_string(all_steps))
     for k, v in directional_shortest.items():
         print(k, v)
 
