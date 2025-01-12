@@ -1,4 +1,3 @@
-import itertools
 import numpy as np
 import math
 from dataclasses import dataclass
@@ -290,54 +289,19 @@ def day6_part2(fn):
 
 
 def day7_generate_operators(num_operators, max_num_combinations):
-    operators = np.array(
-        [[0] * max_num_combinations for _ in range(num_operators**max_num_combinations)]
-    )
-    print("Shape: ", operators.shape)
-    for idx_operator in range(num_operators):
-        for col in range(max_num_combinations):
-            step_length = num_operators ** (max_num_combinations - col)
-            num_el = num_operators ** (max_num_combinations - col - 1)
-            num_steps = 1
-            for step in range(num_steps):
-                row_start = step * step_length + num_el * idx_operator
-                row_end_excl = step * step_length + num_el * idx_operator + 1
-                print(
-                    "To assign: ",
-                    row_start,
-                    row_end_excl,
-                    col,
-                    idx_operator,
-                )
-                operators[row_start:row_end_excl][col] = idx_operator
-            # print(step, num_el)
-            ## TODO: Generate the "binary" table. Eg for num_operators = 2, max_num_combinations = 3
-            ## 000
-            ## 001
-            ## 010
-            ## 011
-            ## 100
-            ## 101
-            ## 110
-            ## 111
-            ##
-            # Num operators = 3, max_num_combinations = 2:
-            #
-            # 00
-            # 01
-            # 02
-            # 10
-            # 11
-            # 12
-            # 20
-            # 21
-            # 22
+    num_rows = num_operators**max_num_combinations
+    num_cols = max_num_combinations
+    operators = [[0] * max_num_combinations for _ in range(num_rows)]
+    for col in range(num_cols):
+        group_size = num_operators ** (num_cols - col)
+        for row in range(num_rows):
+            for cur_op in range(num_operators):
+                if (row // (group_size // num_operators)) % num_operators == cur_op:
+                    operators[row][col] = cur_op
     return operators
 
 
 def day7_part1(fn):
-    # oo = day7_generate_operators(2, 2)
-    # print(oo)
     lines = read_file_as_lines(fn)
     score = 0
     max_number_count = 0
@@ -347,8 +311,7 @@ def day7_part1(fn):
         numbers = list(map(int, parts[1].split(" ")))
         max_number_count = max(max_number_count, len(numbers))
     max_num_operators = max_number_count - 1
-    operators = list(map(list, itertools.product([0, 1], repeat=max_num_operators)))
-    # TODO: Replace line above with day7_generate_operators()
+    operators = day7_generate_operators(2, max_num_operators)
     for line in lines:
         parts = line.split(": ")
         the_sum = int(parts[0])
@@ -372,8 +335,48 @@ def day7_part1(fn):
     return score
 
 
-def day7_part2(fn):
-    return 0
+def day7_part2(fn: str):
+    # if fn.find("real") > -1:
+    #     return -1
+    lines = read_file_as_lines(fn)
+    equations = [
+        (
+            int(line.split(":")[0]),
+            tuple(map(lambda x: int(x), line.split(": ")[1].split(" "))),
+        )
+        for line in lines
+    ]
+    max_num_combos = max(map(lambda x: len(x[1]), equations)) - 1
+    num_op = 3
+    operators = day7_generate_operators(num_op, max_num_combos)
+    score = 0
+    for val_out, vals_in in equations:
+        print(val_out, vals_in)
+        is_ok = False
+        num_in = len(vals_in)
+        ops = [
+            x[max_num_combos - (num_in - 1) :]
+            for x in operators[: num_op ** (num_in - 1)]
+        ]
+        for cur_ops in ops:
+            vals = [] + list(vals_in)
+            for op in cur_ops:
+                res = 0
+                if op == 0:
+                    res = vals[0] + vals[1]
+                if op == 1:
+                    res = vals[0] * vals[1]
+                if op == 2:
+                    res = int(str(vals[0]) + str(vals[1]))
+                vals = [res] + vals[2:]
+            if vals[0] == val_out:
+                is_ok = True
+                break
+            if is_ok:
+                break
+        if is_ok:
+            score += val_out
+    return score
 
 
 def day8_hash(row, col):
