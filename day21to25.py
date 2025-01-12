@@ -190,7 +190,9 @@ def day23_part2(fn: str):
     return ",".join(names)
 
 
-def day24_get_input(fn: str):
+def day24_get_input(
+    fn: str,
+) -> tuple[List[tuple[str, int]],]:
     lines = read_file_as_lines(fn)
     idx_empty = lines.index("")
     lines_initial = lines[:idx_empty]
@@ -202,8 +204,9 @@ def day24_get_input(fn: str):
     return initial, wires
 
 
-def day24_part1(fn: str):
-    initial, wires = day24_get_input(fn)
+def day24_get_z(
+    initial: List[tuple[str, int]], wires: List[tuple[str, str, str, str]]
+) -> int:
     vals = {}
     for name, val in initial:
         vals[name] = val
@@ -237,8 +240,13 @@ def day24_part1(fn: str):
     return res
 
 
+def day24_part1(fn: str):
+    initial, wires = day24_get_input(fn)
+    return day24_get_z(initial, wires)
+
+
 def day24_part2(fn: str):
-    if fn.find("real") > -1:
+    if fn.find("test") > -1:
         return -1
     initial, wires = day24_get_input(fn)
     zs = [var_out for var_out, _, _, _ in wires if var_out.startswith("z")]
@@ -249,9 +257,13 @@ def day24_part2(fn: str):
     y_bin_string = "".join([str(v) for v in y_bits])
     x_val = int(x_bin_string, 2)
     y_val = int(y_bin_string, 2)
-    z_val = x_val + y_val
-    z_bin_string = f"{z_val:0{num_z_vals}b}"
+    z_exp_val = x_val + y_val
+    z_exp_bin_string = f"{z_exp_val:0{num_z_vals}b}"
+    z_act_val = day24_get_z(initial, wires)
+    z_act_bin_string = f"{z_act_val:0{num_z_vals}b}"
     print(x_bin_string, x_val)
     print(y_bin_string, y_val)
-    print(z_bin_string, z_val)
+    print(z_exp_bin_string, z_exp_val)
+    print(z_act_bin_string, z_act_val)
+    print(len(wires))
     return 0
