@@ -359,17 +359,15 @@ def day7_part2(fn: str):
             for x in operators[: num_op ** (num_in - 1)]
         ]
         for cur_ops in ops:
-            vals = [] + list(vals_in)
-            for op in cur_ops:
-                res = 0
+            res = vals_in[0]
+            for idx, op in enumerate(cur_ops):
                 if op == 0:
-                    res = vals[0] + vals[1]
+                    res = res + vals_in[idx + 1]
                 if op == 1:
-                    res = vals[0] * vals[1]
+                    res = res * vals_in[idx + 1]
                 if op == 2:
-                    res = int(str(vals[0]) + str(vals[1]))
-                vals = [res] + vals[2:]
-            if vals[0] == val_out:
+                    res = int(str(res) + str(vals_in[idx + 1]))
+            if res == val_out:
                 is_ok = True
                 break
             if is_ok:
